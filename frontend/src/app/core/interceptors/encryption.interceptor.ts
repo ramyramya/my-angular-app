@@ -101,12 +101,12 @@ export class EncryptionInterceptor implements HttpInterceptor {
         console.log("Interceptor event:", event);
 
         if (event instanceof HttpResponse && event.body && event.body.encrypted) {
-          console.log("Encrypted Response Body:", event.body.encrypted);
+          //console.log("Encrypted Response Body:", event.body.encrypted);
 
           try {
             // Decrypt the response body
             const decryptedBody = this.decrypt(event.body.encrypted);
-            console.log("Decrypted Body:", decryptedBody);
+            //console.log("Decrypted Body:", decryptedBody);
 
             // Clone the response and replace the body with the decrypted one
             const clonedResponse = event.clone({ body: decryptedBody });

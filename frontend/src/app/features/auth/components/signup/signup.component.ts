@@ -30,21 +30,24 @@ export class SignupComponent implements OnInit {
 
   onSubmit(): void {
     if (this.signupForm.valid) {
-      this.authService.signup(this.signupForm.value).subscribe(
-        response => {
-          console.log(response);
-          if(response.success){
-            this.toastr.success("Registered Successfully");
-            this.router.navigateByUrl('/auth/login');
-          }
-          else{
-            this.toastr.error('Signup failed');
-          }
-          //console.log('Signup successful', response);
-        },
-        error => {
+      this.authService.signup(this.signupForm.value).subscribe({
+
+        next:
+          response => {
+            //console.log(response);
+            if (response.success) {
+              this.toastr.success("Registered Successfully");
+              this.router.navigateByUrl('/auth/login');
+            }
+            else {
+              this.toastr.error('Signup failed');
+            }
+            //console.log('Signup successful', response);
+          },
+        error: error => {
           console.error('Signup failed', error);
         }
+      }
       );
     }
     this.signupForm.reset();

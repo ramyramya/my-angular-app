@@ -23,7 +23,7 @@ import { EncryptionInterceptor } from './core/interceptors/encryption.intercepto
     BrowserAnimationsModule,
     ToastrModule.forRoot(
       {
-        positionClass: 'toast-top-left',
+        positionClass: 'toast-top-right',
         timeOut: 3000,
         closeButton: true,
         progressBar: true,

@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AuthService } from '../../services/auth.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-login',
@@ -11,11 +13,11 @@ export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
   passwordVisible: boolean = false;
 
-  constructor(private fb: FormBuilder) { }
+  constructor(private fb: FormBuilder, private authService: AuthService, private toastr: ToastrService) { }
 
   ngOnInit(): void {
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
+      emailOrUsername: ['', [Validators.required]],
       password: ['', [Validators.required]]
     });
   }
@@ -27,8 +29,29 @@ export class LoginComponent implements OnInit {
   onLogin(): void {
     if (this.loginForm.valid) {
       const loginData = this.loginForm.value;
-      console.log('Logging in with:', loginData);
-      // Handle login logic here
+      //console.log('Logging in with:', loginData);
+
+      this.authService.login(loginData).subscribe(
+        {
+          next: response => {
+            if (response.success) {
+              sessionStorage.setItem('access_token', response.accessToken);
+              sessionStorage.setItem('refresh_token', response.refreshToken);
+              console.log('Logged in successfully!');
+              this.toastr.success('Logged in successfully!', 'Success');
+              this.loginForm.reset();
+            } else {
+              console.log('Login failed:', response.message);
+              this.toastr.error('Login failed: ' + response.message, 'Error');
+              this.loginForm.reset();
+            }
+          }, error: error => {
+            console.error('Error during login:', error);
+            // Display error notification
+            this.toastr.error('An error occurred during login. Please try again.', 'Error');
+          }
+        });
     }
   }
 }
+
