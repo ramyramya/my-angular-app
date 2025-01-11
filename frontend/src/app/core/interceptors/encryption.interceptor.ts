@@ -87,12 +87,23 @@ export class EncryptionInterceptor implements HttpInterceptor {
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     console.log("EncryptionInterceptor triggered");
 
+    const token = sessionStorage.getItem('access_token');
+
     // Encrypt the request body if it exists
     if (req.body) {
       console.log("Encrypting request body");
       const encryptedBody = this.encrypt(req.body);
       req = req.clone({
         body: { payload: encryptedBody } // Wrap the encrypted body in a `payload` object
+      });
+    }
+
+
+    if (token) {
+      req = req.clone({
+        setHeaders: {
+          Authorization: `${token}`,
+        },
       });
     }
 

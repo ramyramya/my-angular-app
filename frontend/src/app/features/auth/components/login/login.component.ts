@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { ToastrService } from 'ngx-toastr';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -13,7 +14,7 @@ export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
   passwordVisible: boolean = false;
 
-  constructor(private fb: FormBuilder, private authService: AuthService, private toastr: ToastrService) { }
+  constructor(private fb: FormBuilder, private authService: AuthService, private toastr: ToastrService, private router: Router) { }
 
   ngOnInit(): void {
     this.loginForm = this.fb.group({
@@ -40,6 +41,7 @@ export class LoginComponent implements OnInit {
               console.log('Logged in successfully!');
               this.toastr.success('Logged in successfully!', 'Success');
               this.loginForm.reset();
+              this.router.navigateByUrl('/dashboard');
             } else {
               console.log('Login failed:', response.message);
               this.toastr.error('Login failed: ' + response.message, 'Error');
