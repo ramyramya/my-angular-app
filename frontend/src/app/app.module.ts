@@ -11,6 +11,7 @@ import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { EncryptionInterceptor } from './core/interceptors/encryption.interceptor';
 
 
+
 @NgModule({
   declarations: [
     AppComponent,

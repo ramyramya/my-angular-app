@@ -1,5 +1,8 @@
 const dashboardService = require('./dashboard.service');
 
+const fs = require('fs');
+const CryptoJS = require('crypto-js');
+
 async function getUserInfo(req, res) {
   try {
     const userId = req.user.userId; // Extracted from the token via authMiddleware
@@ -16,4 +19,6 @@ async function getUserInfo(req, res) {
   }
 }
 
-module.exports = { getUserInfo };
+
+
+module.exports = { getUserInfo};

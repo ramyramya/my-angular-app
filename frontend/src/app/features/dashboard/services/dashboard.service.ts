@@ -15,3 +15,5 @@ export class DashboardService {
     return this.http.get<{ username: string; thumbnail: string }>(`${this.apiUrl}/user-info`);
   }
 }
+  
+

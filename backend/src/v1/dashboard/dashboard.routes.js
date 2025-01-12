@@ -5,4 +5,6 @@ const authMiddleware = require('../../middleware/authMiddleware');
 
 router.get('/user-info', authMiddleware, dashboardController.getUserInfo);
 
+
+
 module.exports = router;
