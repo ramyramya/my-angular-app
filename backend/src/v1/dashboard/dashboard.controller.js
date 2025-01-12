@@ -46,7 +46,7 @@ async function getUserInfo(req, res) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    res.json({ success: true, username: userInfo.username, profile_pic: userInfo.profile_pic });
+    res.json({ success: true, username: userInfo.username, profile_pic: userInfo.profile_pic,email: userInfo.email });
   } catch (error) {
     console.error('Error fetching user info:', error);
     res.status(500).json({ success: false, message: 'Internal Server Error' });
@@ -126,4 +126,32 @@ async function updateProfilePic(req, res) {
   }
 }
 
-module.exports = { getUserInfo, getPresignedUrl, updateProfilePic };
+// Endpoint to get the vendor count
+async function getVendorCount(req, res) {
+  try {
+    const count = await dashboardService.getVendorCount();
+    res.json({ success: true, count });
+  } catch (error) {
+    console.error('Error fetching vendor count:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+}
+
+// Endpoint to get the list of products
+async function getProducts(req, res) {
+  try {
+    const products = await dashboardService.getProducts();
+    res.json({ success: true, products });
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+}
+
+module.exports = {
+  getUserInfo,
+  getPresignedUrl,
+  updateProfilePic,
+  getVendorCount,
+  getProducts
+};

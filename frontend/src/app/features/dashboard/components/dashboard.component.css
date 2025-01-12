@@ -2,4 +2,27 @@
 .container {
     margin-top: 2rem;
   }
+
+  :host {
+    display: block;
+    background-color: #DADCFA; /* Set the background color */
+    min-height: 100vh; /* Ensure it covers the full viewport height */
+    margin: 0; /* Remove any default margins */
+    padding: 0; /* Remove any default padding */
+  }
   
+
+
+  /* Remove border and background for action buttons */
+.table .btn {
+  border: none;
+  background: transparent;
+  padding: 0.375rem 0.75rem;  /* Adjust padding if needed */
+  font-size: 1.125rem; /* Icon size */
+  color: #000; /* Icon color */
+}
+
+/* Optional: Add hover effect to make the icon more interactive */
+.table .btn:hover {
+  color: #007bff;  /* Change color on hover */
+}

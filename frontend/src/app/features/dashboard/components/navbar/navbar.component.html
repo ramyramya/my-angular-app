@@ -1,46 +1,11 @@
-<!--<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">Dashboard</a>
-      <div class="ms-auto d-flex align-items-center">
-        <div class="dropdown ms-3">
-          <button 
-            class="btn btn-secondary dropdown-toggle d-flex align-items-center" 
-            type="button" 
-            id="userDropdown" 
-            data-bs-toggle="dropdown" 
-            aria-expanded="false"
-          >
-            <img 
-              [src]="thumbnail" 
-              alt="User Thumbnail" 
-              class="rounded-circle me-2" 
-              width="30" 
-              height="30"
-            >
-            <span>{{ username }}</span>
-          </button>
-          <ul class="dropdown-menu" aria-labelledby="userDropdown">
-            <li><a class="dropdown-item" href="#">Upload Profile Photo</a></li>
-            
-            <li><a class="dropdown-item" (click)="logout()">Logout</a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </nav>-->
-  
-
-
-
-
-  <!-- Navbar HTML (with modal added) -->
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
+<!-- Navbar HTML (white background, seamless buttons) -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#">Dashboard</a>
+    <a class="navbar-brand fw-bold text-dark" href="#">Dashboard</a>
     <div class="ms-auto d-flex align-items-center">
       <div class="dropdown ms-3">
         <button 
-          class="btn btn-secondary dropdown-toggle d-flex align-items-center" 
+          class="btn btn-link text-dark dropdown-toggle d-flex align-items-center p-0" 
           type="button" 
           id="userDropdown" 
           data-bs-toggle="dropdown" 
@@ -53,9 +18,12 @@
             width="30" 
             height="30"
           >
-          <span>{{ username }}</span>
+          <div class="d-flex flex-column text-start">
+            <span>{{ username }}</span>
+            <small class="text-muted">{{ email }}</small>
+          </div>
         </button>
-        <ul class="dropdown-menu" aria-labelledby="userDropdown">
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
           <li><a class="dropdown-item" (click)="openModal()">Upload Profile Photo</a></li>
           <li><a class="dropdown-item" (click)="logout()">Logout</a></li>
         </ul>
@@ -73,7 +41,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <input type="file" (change)="onFileSelected($event)" />
+        <input type="file" class="form-control" (change)="onFileSelected($event)" />
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

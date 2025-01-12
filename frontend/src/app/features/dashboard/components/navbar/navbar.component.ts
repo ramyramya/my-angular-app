@@ -70,6 +70,7 @@ import * as bootstrap from 'bootstrap';  // Import Bootstrap JS
 export class NavbarComponent implements OnInit {
   username: string = '';
   profile_pic: string = '';
+  email: string = '';
   selectedFile: File | null = null;
   fileUrl: string = '';
 
@@ -82,6 +83,7 @@ export class NavbarComponent implements OnInit {
     this.dashboardService.getUserData().subscribe(data => {
       this.username = data.username;
       this.profile_pic = data.profile_pic;
+      this.email = data.email;
       console.log(data);
       console.log(this.profile_pic);
     });

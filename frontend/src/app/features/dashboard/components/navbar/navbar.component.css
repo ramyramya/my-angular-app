@@ -1,8 +1,35 @@
+/* Navbar Styling */
 .navbar {
-    padding: 1rem;
-  }
-  
-  .dropdown img {
-    border: 2px solid #ccc;
-  }
-  
+  background-color: #ffffff !important; /* White background */
+  border-bottom: 1px solid #e0e0e0; /* Light border for subtle separation */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.navbar .navbar-brand {
+  color: #333333 !important; /* Darker text for better readability */
+}
+
+.navbar .dropdown-menu {
+  border: none; /* Remove borders from dropdown menu */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.navbar .btn-link {
+  color: #333333 !important; /* Match button text color with navbar */
+  text-decoration: none; /* Remove underline from link-style buttons */
+}
+
+.navbar .btn-link:hover {
+  color: #000000 !important; /* Darker hover effect */
+}
+
+/* Button inside modal */
+.modal-content .btn {
+  border-radius: 4px; /* Rounded buttons */
+}
+
+/* Remove border and padding for seamless button */
+.navbar .btn-link {
+  border: none !important;
+  padding: 0 !important;
+}

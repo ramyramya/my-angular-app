@@ -30,8 +30,8 @@ export class DashboardService {
 
   constructor(private http: HttpClient) { }
 
-  getUserData(): Observable<{ username: string; profile_pic: string }> {
-    return this.http.get<{ username: string; profile_pic: string }>(`${this.apiUrl}/user-info`);
+  getUserData(): Observable<{ username: string; profile_pic: string; email: string }> {
+    return this.http.get<{ username: string; profile_pic: string; email: string }>(`${this.apiUrl}/user-info`);
   }
 
   getPresignedUrl(fileName: string, fileType: string): Observable<any> {
@@ -41,6 +41,16 @@ export class DashboardService {
 
   updateProfilePic(fileUrl: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/update-profile-pic`, { fileUrl });
+  }
+
+   // Fetch vendor count
+   getVendorCount(): Observable<{success:string, count:number}> {
+    return this.http.get<{success:string, count:number}>(`${this.apiUrl}/vendorCount`);
+  }
+
+  // Fetch products
+  getProducts(): Observable<{success:string, products:any[]}> {
+    return this.http.get<{success:string, products:any[]}>(`${this.apiUrl}/products`);
   }
   
 }

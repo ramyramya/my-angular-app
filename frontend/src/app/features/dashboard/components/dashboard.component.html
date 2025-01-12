@@ -1,5 +1,94 @@
 <app-navbar></app-navbar>
-<div class="container mt-4">
-  <h1>Welcome to the Dashboard</h1>
-</div>
 
+<div class="container mt-4">
+  <!-- Entire Inventory Section with White Background as One Box -->
+  <div class="bg-white p-4 rounded shadow-sm">
+
+    <!-- Inventory Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <!-- Table Title -->
+      <h3 class="mb-0">Inventory Movements</h3>
+
+      <!-- Vendor Count and Action Buttons in the same row -->
+      <div class="d-flex align-items-center">
+        <!-- Vendor Count -->
+        <div class="badge bg-light text-dark rounded-pill p-2 me-3">
+          <strong>{{ vendorCount }}</strong> Vendors
+        </div>
+
+        <!-- Action Buttons -->
+        <div>
+          <button class="btn btn-outline-primary me-2">Move To</button>
+          <button class="btn btn-outline-primary me-2">
+            <i class="bi bi-download"></i> Download All
+          </button>
+          <button class="btn btn-outline-primary me-2">
+            <i class="bi bi-upload"></i> Import
+          </button>
+          <button class="btn btn-primary me-2"> <!-- Blue background for Add Product -->
+            <i class="bi bi-plus-circle"></i> Add Product
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Bar & Filter Button aligned to the right -->
+    <div class="d-flex justify-content-end mb-3">
+      <div class="d-flex">
+        <input class="form-control me-2" type="text" placeholder="Search products..." aria-label="Search" style="height: 38px; width: 250px;">
+        <button class="btn btn-outline-primary" style="height: 38px;">
+          <i class="bi bi-funnel"></i> Filter
+        </button>
+      </div>
+    </div>
+
+    <!-- View and Cart Buttons -->
+    <div class="d-flex mb-3">
+      <button class="btn btn-outline-secondary me-2">View All</button>
+      <button class="btn btn-outline-secondary">Cart</button>
+    </div>
+
+    <!-- Inventory Table -->
+    <table class="table table-striped table-bordered table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th><input type="checkbox" class="form-check-input"></th>
+          <th>Product Name</th>
+          <th>Status</th>
+          <th>Category</th>
+          <th>Vendors</th>
+          <th>Quantity</th>
+          <th>Unit</th>
+          <th>Actions</th> <!-- New Column for Actions -->
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let product of products">
+          <td><input type="checkbox" class="form-check-input"></td>
+          <td>{{ product.product_name }}</td>
+          <td>
+            <!-- Available or Sold Out status with colored boxes -->
+            <span *ngIf="product.product_status === 1" class="badge bg-success text-white">Available</span>
+            <span *ngIf="product.product_status !== 1" class="badge bg-light text-dark">Sold Out</span>
+          </td>
+          <td>{{ product.category_name }}</td>
+          <td>{{ product.vendor_name }}</td>
+          <td>{{ product.quantity_in_stock }}</td>
+          <td>{{ product.unit }}</td>
+          <td>
+            <!-- Action Icons for Download, Edit, and Delete without borders -->
+            <button class="btn btn-sm me-2" style="border: none; background: transparent;">
+              <i class="bi bi-download"></i>
+            </button>
+            <button class="btn btn-sm me-2" style="border: none; background: transparent;">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm" style="border: none; background: transparent;">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div> <!-- End of bg-white p-4 rounded -->
+</div>
