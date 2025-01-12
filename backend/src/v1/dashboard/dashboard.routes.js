@@ -19,6 +19,7 @@ router.get('/user-info', authMiddleware, dashboardController.getUserInfo);
 
 // Route to get presigned URL for uploading profile photo
 router.post('/get-presigned-url', authMiddleware, dashboardController.getPresignedUrl);
+router.post('/update-profile-pic', authMiddleware, dashboardController.updateProfilePic);
 
 module.exports = router;
 

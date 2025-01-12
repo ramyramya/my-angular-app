@@ -69,8 +69,9 @@ import * as bootstrap from 'bootstrap';  // Import Bootstrap JS
 })
 export class NavbarComponent implements OnInit {
   username: string = '';
-  thumbnail: string = '';
+  profile_pic: string = '';
   selectedFile: File | null = null;
+  fileUrl: string = '';
 
   constructor(
     private dashboardService: DashboardService,
@@ -80,7 +81,9 @@ export class NavbarComponent implements OnInit {
   ngOnInit(): void {
     this.dashboardService.getUserData().subscribe(data => {
       this.username = data.username;
-      this.thumbnail = data.thumbnail;
+      this.profile_pic = data.profile_pic;
+      console.log(data);
+      console.log(this.profile_pic);
     });
   }
 
@@ -106,6 +109,7 @@ export class NavbarComponent implements OnInit {
         if (response.success) {
           const presignedUrl = response.presignedUrl;
           console.log(response);
+          this.fileUrl = response.fileUrl
   
           // Upload file to S3 using the presigned URL
           fetch(presignedUrl, {
@@ -120,6 +124,7 @@ export class NavbarComponent implements OnInit {
               if (response.ok) {
                 console.log('File uploaded successfully');
                 //this.thumbnail = response.fileUrl;
+                this.storeFileUrl(this.fileUrl);
                 this.closeModal();
               } else {
                 console.error('Error uploading file to S3:', response.statusText);
@@ -152,5 +157,18 @@ export class NavbarComponent implements OnInit {
     sessionStorage.clear();
     this.router.navigateByUrl('/auth/login');
   }
+
+
+  storeFileUrl(fileUrl: string): void {
+    // Send the file URL to the backend to update the user's profile_pic
+    this.dashboardService.updateProfilePic(this.fileUrl).subscribe(response => {
+      if (response.success) {
+        console.log('Profile picture updated successfully');
+        //this.thumbnail = fileUrl;  // Update the thumbnail locally for the user
+      } else {
+        console.error('Error updating profile picture:', response.message);
+      }
+    });
 }
 
+}
