@@ -169,6 +169,101 @@ async function getVendors(req, res) {
   }
 }
 
+/*async function addProduct(req, res) {
+  try {
+    // Decrypt the incoming encrypted payload
+    const secretKey = process.env.SECRET_KEY;  // Make sure your secret key is in .env
+    const decryptedData = CryptoJS.AES.decrypt(req.body.payload, secretKey).toString(CryptoJS.enc.Utf8);
+    console.log(decryptedData);
+    const { productName, category, vendor, quantity, unitPrice, unit, status, productImage } = decryptedData;
+
+    // Validate the required fields (example: name, price)
+    if (!productName || !category || !vendor || quantity <= 0 || !unit || !status) {
+      return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
+
+    // Prepare the product data for insertion
+    const newProduct = {
+      productName,
+      category,
+      vendor,
+      quantity,
+      unitPrice,
+      unit,
+      productImage,
+      status,
+      created_at: new Date(),  // Assuming you want to add timestamps
+      updated_at: new Date(),
+    };
+
+    // Add the product using the service (assuming addProduct returns the inserted product data)
+    const addedProduct = await dashboardService.addProduct(newProduct);
+    console.log("Hello Hii");
+
+    if (addedProduct) {
+      console.log("Added product: ", addedProduct);;
+      res.json({ success: true, message: 'Product added successfully', product: addedProduct });
+    } else {
+      res.status(500).json({ success: false, message: 'Failed to add product' });
+    }
+  } catch (error) {
+    console.error('Error adding product:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+}*/
+
+
+async function addProduct(req, res) {
+  try {
+    const secretKey = process.env.SECRET_KEY; 
+    const decryptedData = CryptoJS.AES.decrypt(req.body.payload, secretKey).toString(CryptoJS.enc.Utf8);
+    console.log('Decrypted Data:', decryptedData);
+
+    // Try to parse decrypted data to JSON
+    let parsedData;
+    try {
+      parsedData = JSON.parse(decryptedData);
+      console.log('Parsed Data:', parsedData);
+    } catch (error) {
+      console.error('Failed to parse decrypted data:', error);
+      return res.status(400).json({ success: false, message: 'Invalid data format' });
+    }
+
+    const { productName, category, vendor, quantity, unitPrice, unit, status, productImage } = parsedData;
+
+    // Validate required fields
+    if (!productName || !category || !vendor || quantity <= 0 || !unit || !status) {
+      return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
+
+    const newProduct = {
+      productName,
+      category,
+      vendor,
+      quantity,
+      unitPrice,
+      unit,
+      productImage,
+      status,
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+
+    const addedProduct = await dashboardService.addProduct(newProduct);
+    console.log("Product added:", addedProduct);
+
+    if (addedProduct) {
+      res.json({ success: true, message: 'Product added successfully', product: addedProduct });
+    } else {
+      res.status(500).json({ success: false, message: 'Failed to add product' });
+    }
+  } catch (error) {
+    console.error('Error adding product:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+}
+
+
 module.exports = {
   getUserInfo,
   getPresignedUrl,
@@ -177,4 +272,9 @@ module.exports = {
   getProducts,
   getCategories,
   getVendors,
+  addProduct
 };
+
+
+
+

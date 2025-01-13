@@ -68,6 +68,9 @@ import { DashboardService } from '../services/dashboard.service';
 import { Product } from '../interfaces/product.interface';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import * as bootstrap from 'bootstrap'
+import imageCompression from 'browser-image-compression';
+import { ToastrService } from 'ngx-toastr';
+
 
 @Component({
   selector: 'app-dashboard',
@@ -88,9 +91,10 @@ export class DashboardComponent implements OnInit {
   categories: any[] = []; // Categories for the dropdown
   vendors: any[] = []; // Vendors for the dropdown
   selectedFile: File | null = null; // Selected product image file
+  fileUrl: string = '';
 
   constructor(
-    private dashboardService: DashboardService,
+    private dashboardService: DashboardService, private toastr: ToastrService,
     private fb: FormBuilder // Form builder service for reactive forms
   ) {
     this.addProductForm = this.fb.group({
@@ -98,6 +102,7 @@ export class DashboardComponent implements OnInit {
       category: ['', Validators.required],
       vendor: ['', Validators.required],
       quantity: [0, [Validators.required, Validators.min(1)]],
+      unitPrice: [0, [Validators.required, Validators.min(0)]],
       unit: ['', Validators.required],
       status: [1, [Validators.required]],
     });
@@ -167,28 +172,27 @@ export class DashboardComponent implements OnInit {
   }
 
   // Handle file selection for product image
-  /*onFileSelect(event: any): void {
+  onFileSelect(event: any): void {
     this.selectedFile = event.target.files[0];
   }
 
   // Add a new product
-  addProduct(): void {
+  /*addProduct(): void {
     if (this.addProductForm.invalid) {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('productName', this.addProductForm.value.productName);
-    formData.append('category', this.addProductForm.value.category);
-    formData.append('vendor', this.addProductForm.value.vendor);
-    formData.append('quantity', this.addProductForm.value.quantity);
-    formData.append('unit', this.addProductForm.value.unit);
-    formData.append('status', 'Available'); // Default status
+    
     if (this.selectedFile) {
-      formData.append('productImage', this.selectedFile);
+      this.uploadProfilePhoto();
     }
 
-    this.dashboardService.addProduct(formData).subscribe({
+    const productData = {
+      ...this.addProductForm.value,
+      productImage: this.fileUrl
+    }
+
+    this.dashboardService.addProduct(productData).subscribe({
       next: () => {
         // Close modal, reload product list
         const modalElement = document.getElementById('addProductModal') as HTMLElement;
@@ -203,6 +207,133 @@ export class DashboardComponent implements OnInit {
       }
     });
   }*/
+
+    addProduct(): void {
+      if (this.addProductForm.invalid) {
+        return;
+      }
+    
+      // Only proceed with adding product if there's a selected file
+      if (this.selectedFile) {
+        // Wait for the upload to complete before proceeding
+        this.uploadProfilePhoto().then(() => {
+          // Check if the fileUrl is set (file uploaded successfully)
+          if (this.fileUrl) {
+            const productData = {
+              ...this.addProductForm.value,
+              productImage: this.fileUrl
+            };
+    
+            this.dashboardService.addProduct(productData).subscribe({
+              next: (data) => {
+                if(data.success){
+                  this.toastr.success('Product added Successfully!', 'Success');
+                }
+              },
+              error: (error) => {
+                console.error('Error adding product:', error);
+              }
+            });
+          } else {
+            console.error('File upload failed. Cannot submit product data.');
+          }
+        }).catch(error => {
+          console.error('Error uploading product image:', error);
+        });
+      } else {
+        console.log("Else");
+        // If no file is selected, proceed directly with the product data
+        const productData = {
+          ...this.addProductForm.value,
+          productImage: this.fileUrl // Empty or default fileUrl if no file selected
+        };
+    
+        this.dashboardService.addProduct(productData).subscribe({
+          next: (data) => {
+            if(data.success){
+              this.toastr.success('Logged in successfully!', 'Success');
+            }
+            // Close modal, reload product list
+            /*const modalElement = document.getElementById('addProductModal') as HTMLElement;
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            modal?.hide();*/
+          
+          },
+          error: (error) => {
+            console.error('Error adding product:', error);
+          }
+        });
+        
+      }
+    }
+    
+
+  async uploadProfilePhoto(): Promise<void> {
+    if (this.selectedFile) {
+      const fileName = this.selectedFile.name;
+      const fileType = this.selectedFile.type;
+
+      // Compress the selected image
+      try {
+        const compressedFile = await this.compressImage(this.selectedFile);
+        console.log('Compressed file:', compressedFile);
+
+        // Get presigned URL from backend
+        this.dashboardService.getPresignedUrl(fileName, fileType).subscribe((response: any) => {
+          if (response.success) {
+            const presignedUrl = response.presignedUrl;
+            console.log(response);
+            this.fileUrl = response.fileUrl;
+
+            // Upload the compressed file to S3 using the presigned URL
+            fetch(presignedUrl, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': fileType, // Use the file's MIME type
+              },
+              body: compressedFile
+            })
+              .then(response => {
+                if (response.ok) {
+                  console.log('File uploaded successfully');
+                  console.log(this.fileUrl);
+                  //this.storeFileUrl(this.fileUrl);
+                  
+                } else {
+                  console.error('Error uploading file to S3:', response.statusText);
+                }
+              })
+              .catch(error => {
+                console.error('Error uploading file to S3:', error);
+              });
+          } else {
+            console.error('Error retrieving presigned URL');
+          }
+        });
+      } catch (error) {
+        console.error('Error compressing image:', error);
+      }
+    } else {
+      console.error('No file selected for upload');
+    }
+  }
+
+  async compressImage(file: File): Promise<File> {
+    const options = {
+      maxSizeMB: 1, // Limit the size to 1MB
+      maxWidthOrHeight: 60, // Maximum width or height of the compressed image
+      useWebWorker: true, // Use a web worker for the compression
+    };
+
+    try {
+      const compressedFile = await imageCompression(file, options);
+      return compressedFile;
+    } catch (error) {
+      console.error('Error compressing file:', error);
+      throw error;
+    }
+  }
+
 
   // Download product data as a PDF when the download icon is clicked
   downloadProductAsPDF(product: Product): void {

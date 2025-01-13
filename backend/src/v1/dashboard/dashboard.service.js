@@ -26,34 +26,6 @@ async function getVendorCount() {
   }
 }
 
-/*async function getProducts() {
-  try {
-    const products = await knex('products')
-      .select(
-        'products.product_name',
-        'products.status AS product_status', // Status of the product
-        'categories.category_name',
-        'categories.status AS category_status', // Status of the category
-        'vendors.vendor_name',
-        'vendors.status AS vendor_status', // Status of the vendor
-        'products.quantity_in_stock',
-        'products.unit_price',
-        'products.product_image',
-        'products.unit'
-      )
-      .join('categories', 'products.category_id', '=', 'categories.category_id')
-      .join('product_to_vendor', 'products.product_id', '=', 'product_to_vendor.product_id') // Join with product_to_vendor
-      .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id') // Join with vendors using product_to_vendor
-      .where('products.status', 1) // Example: Only active products
-      .andWhere('categories.status', 1) // Example: Only active categories
-      .andWhere('vendors.status', 1); // Example: Only active vendors
-    
-    return products;
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    throw error;
-  }
-}*/
 
 async function getProducts(page = 1, limit = 5) {
   try {
@@ -123,10 +95,59 @@ async function getVendors() {
   }
 }
 
+// Add Product and Vendor relationship
+async function addProduct(productData) {
+  console.log("Product Data: ", productData);
+  const trx = await knex.transaction(); // Start a transaction
+
+  try {
+    // Insert the new product into the 'products' table
+    const newProduct = await trx('products')
+      .insert({
+        product_name: productData.productName,
+        category_id: productData.category,
+        quantity_in_stock: productData.quantity,
+        unit_price: productData.unitPrice, 
+        unit: productData.unit,
+        product_image: productData.productImage, // Assuming productData has productImage
+        status: productData.status
+      })
+
+      console.log("Hello:", newProduct);
+      
+
+    // Insert the relationship into 'product_to_vendor' table
+    const productToVendor = await trx('product_to_vendor')
+      .insert({
+        vendor_id: productData.vendor, // Assuming vendor is the ID
+        product_id: newProduct, // Use the ID of the newly inserted product
+        status: productData.status // Assuming status is the same for vendor
+      })
+      
+
+    // Commit the transaction
+    await trx.commit();
+
+    // Return the newly added product and vendor relationship
+    return { product: newProduct, productToVendor };
+
+  } catch (error) {
+    // Rollback the transaction in case of error
+    await trx.rollback();
+    throw error;  // Rethrow the error to be handled by the controller
+  }
+}
+
+module.exports = {
+  addProduct,
+  // Other service methods...
+};
+
 module.exports = {
   fetchUserInfo,
   getVendorCount,
   getProducts,
   getCategories,
   getVendors,
+  addProduct
 };

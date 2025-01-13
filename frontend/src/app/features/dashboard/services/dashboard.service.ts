@@ -62,7 +62,8 @@ export class DashboardService {
   downloadProductAsPDF(product: Product){
     const doc = new jsPDF();
         // Add product image (Make sure `product.image_url` is the correct URL or base64 string)
-        const imageUrl = product.product_image;  // Example: product.product_image_url (URL of the image)
+        const imageUrl = "https://akv-interns.s3.ap-south-1.amazonaws.com/profile-photos/kurkure.jpg";
+        console.log(imageUrl);  // Example: product.product_image_url (URL of the image)
   
         // Add the image to the PDF (adjust the parameters as needed)
         doc.addImage(imageUrl, 'JPEG', 140, 30, 50, 50);  // x, y, width, height
@@ -91,7 +92,9 @@ export class DashboardService {
     return this.http.get<any>(`${this.apiUrl}/vendors`);
   }
   
-  
+  addProduct(productData: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/add-product`, productData);
+  }
 }
 
   
