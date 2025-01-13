@@ -22,6 +22,8 @@ router.post('/get-presigned-url', authMiddleware, dashboardController.getPresign
 router.post('/update-profile-pic', authMiddleware, dashboardController.updateProfilePic);
 router.get('/vendorCount', authMiddleware, dashboardController.getVendorCount);
 router.get('/products', authMiddleware, dashboardController.getProducts);
+router.get('/categories', authMiddleware, dashboardController.getCategories);
+router.get('/vendors', authMiddleware, dashboardController.getVendors);
 
 module.exports = router;
 

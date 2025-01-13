@@ -46,7 +46,7 @@ async function getUserInfo(req, res) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    res.json({ success: true, username: userInfo.username, profile_pic: userInfo.profile_pic,email: userInfo.email });
+    res.json({ success: true, username: userInfo.username, thumbnail: userInfo.thumbnail,email: userInfo.email });
   } catch (error) {
     console.error('Error fetching user info:', error);
     res.status(500).json({ success: false, message: 'Internal Server Error' });
@@ -111,7 +111,7 @@ async function updateProfilePic(req, res) {
     // Update the user's profile picture URL in the database
     const updatedUser = await knex('users')  // Assuming your users table is named 'users'
       .where('id', userId)  // Assuming the user's ID is in the 'id' field
-      .update({ profile_pic: fileUrl });
+      .update({ thumbnail: fileUrl });
 
       console.log("updated user: ", updatedUser);
 
@@ -137,16 +137,6 @@ async function getVendorCount(req, res) {
   }
 }
 
-// Endpoint to get the list of products
-/*async function getProducts(req, res) {
-  try {
-    const products = await dashboardService.getProducts();
-    res.json({ success: true, products });
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    res.status(500).json({ success: false, message: 'Internal Server Error' });
-  }
-}*/
 async function getProducts(req, res) {
   try {
     const { page = 1, limit = 5 } = req.query;
@@ -157,12 +147,34 @@ async function getProducts(req, res) {
     res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 }
+// Get categories
+async function getCategories(req, res) {
+  try {
+    const categories = await dashboardService.getCategories();
+    res.json({ success: true, categories });
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+}
 
+// Get vendors
+async function getVendors(req, res) {
+  try {
+    const vendors = await dashboardService.getVendors();
+    res.json({ success: true, vendors });
+  } catch (error) {
+    console.error('Error fetching vendors:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+}
 
 module.exports = {
   getUserInfo,
   getPresignedUrl,
   updateProfilePic,
   getVendorCount,
-  getProducts
+  getProducts,
+  getCategories,
+  getVendors,
 };

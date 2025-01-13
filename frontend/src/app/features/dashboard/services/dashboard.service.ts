@@ -82,6 +82,15 @@ export class DashboardService {
         // Save the PDF file
         doc.save(`${product.product_name}_details.pdf`);
   }
+
+  getCategories(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/categories`);
+  }
+  
+  getVendors(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/vendors`);
+  }
+  
   
 }
 

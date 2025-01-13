@@ -3,7 +3,7 @@ const knex = require('../../mysql/knex');
 async function fetchUserInfo(userId) {
   try {
     const user = await knex('users')
-      .select('username', 'profile_pic', 'email')
+      .select('username', 'thumbnail', 'email')
       .where({ id: userId })
       .first();
 
@@ -97,12 +97,36 @@ async function getProducts(page = 1, limit = 5) {
     throw error;
   }
 }
+// Fetch all categories
+async function getCategories() {
+  try {
+    const categories = await knex('categories')
+      .select('category_id', 'category_name', 'status') // Fetch necessary fields
+      .where('status', 1); // Only active categories
+    return categories;
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    throw error;
+  }
+}
 
-
-
+// Fetch all vendors
+async function getVendors() {
+  try {
+    const vendors = await knex('vendors')
+      .select('vendor_id', 'vendor_name', 'status') // Fetch necessary fields
+      .where('status', 1); // Only active vendors
+    return vendors;
+  } catch (error) {
+    console.error('Error fetching vendors:', error);
+    throw error;
+  }
+}
 
 module.exports = {
   fetchUserInfo,
   getVendorCount,
-  getProducts
+  getProducts,
+  getCategories,
+  getVendors,
 };
