@@ -22,6 +22,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Product } from '../interfaces/product.interface';
+import { jsPDF } from 'jspdf';
+
 
 @Injectable({
   providedIn: 'root'
@@ -31,8 +33,8 @@ export class DashboardService {
 
   constructor(private http: HttpClient) { }
 
-  getUserData(): Observable<{ username: string; profile_pic: string; email: string }> {
-    return this.http.get<{ username: string; profile_pic: string; email: string }>(`${this.apiUrl}/user-info`);
+  getUserData(): Observable<{ username: string; thumbnail: string; email: string }> {
+    return this.http.get<{ username: string; thumbnail: string; email: string }>(`${this.apiUrl}/user-info`);
   }
 
   getPresignedUrl(fileName: string, fileType: string): Observable<any> {
@@ -55,7 +57,31 @@ export class DashboardService {
       `${this.apiUrl}/products?page=${page}&limit=${limit}`
     );
   }
+
+
+  downloadProductAsPDF(product: Product){
+    const doc = new jsPDF();
+        // Add product image (Make sure `product.image_url` is the correct URL or base64 string)
+        const imageUrl = product.product_image;  // Example: product.product_image_url (URL of the image)
   
+        // Add the image to the PDF (adjust the parameters as needed)
+        doc.addImage(imageUrl, 'JPEG', 140, 30, 50, 50);  // x, y, width, height
+        // Add title to the PDF
+        doc.setFontSize(18);
+        doc.text('Product Details', 14, 22);
+        
+        // Add product details
+        doc.setFontSize(12);
+        doc.text(`Product Name: ${product.product_name}`, 14, 30);
+        doc.text(`Category: ${product.category_name}`, 14, 36);
+        doc.text(`Vendor: ${product.vendor_name}`, 14, 42);
+        doc.text(`Quantity in Stock: ${product.quantity_in_stock}`, 14, 48);
+        doc.text(`Unit: ${product.unit}`, 14, 54);
+        doc.text(`Status: ${product.product_status === 1 ? 'Available' : 'Sold Out'}`, 14, 60);
+        
+        // Save the PDF file
+        doc.save(`${product.product_name}_details.pdf`);
+  }
   
 }
 

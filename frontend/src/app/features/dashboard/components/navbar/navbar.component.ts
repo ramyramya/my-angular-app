@@ -61,6 +61,7 @@ import { Component, OnInit } from '@angular/core';
 import { DashboardService } from '../../services/dashboard.service';
 import { Router } from '@angular/router';
 import * as bootstrap from 'bootstrap';  // Import Bootstrap JS
+import imageCompression from 'browser-image-compression';
 
 @Component({
   selector: 'app-navbar',
@@ -69,7 +70,7 @@ import * as bootstrap from 'bootstrap';  // Import Bootstrap JS
 })
 export class NavbarComponent implements OnInit {
   username: string = '';
-  profile_pic: string = '';
+  thumbnail: string = '';
   email: string = '';
   selectedFile: File | null = null;
   fileUrl: string = '';
@@ -82,10 +83,10 @@ export class NavbarComponent implements OnInit {
   ngOnInit(): void {
     this.dashboardService.getUserData().subscribe(data => {
       this.username = data.username;
-      this.profile_pic = data.profile_pic;
+      this.thumbnail = data.thumbnail;
       this.email = data.email;
       console.log(data);
-      console.log(this.profile_pic);
+      console.log(this.thumbnail);
     });
   }
 
@@ -101,7 +102,7 @@ export class NavbarComponent implements OnInit {
     this.selectedFile = event.target.files[0];
   }
 
-  uploadProfilePhoto(): void {
+  /*uploadProfilePhoto(): void {
     if (this.selectedFile) {
       const fileName = this.selectedFile.name;
       const fileType = this.selectedFile.type;
@@ -144,8 +145,74 @@ export class NavbarComponent implements OnInit {
     } else {
       console.error('No file selected for upload');
     }
-  }
+  }*/
   
+    async uploadProfilePhoto(): Promise<void> {
+      if (this.selectedFile) {
+        const fileName = this.selectedFile.name;
+        const fileType = this.selectedFile.type;
+  
+        // Compress the selected image
+        try {
+          const compressedFile = await this.compressImage(this.selectedFile);
+          console.log('Compressed file:', compressedFile);
+  
+          // Get presigned URL from backend
+          this.dashboardService.getPresignedUrl(fileName, fileType).subscribe((response: any) => {
+            if (response.success) {
+              const presignedUrl = response.presignedUrl;
+              console.log(response);
+              this.fileUrl = response.fileUrl;
+  
+              // Upload the compressed file to S3 using the presigned URL
+              fetch(presignedUrl, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': fileType, // Use the file's MIME type
+                },
+                body: compressedFile
+              })
+                .then(response => {
+                  if (response.ok) {
+                    console.log('File uploaded successfully');
+                    this.storeFileUrl(this.fileUrl);
+                    this.closeModal();
+                  } else {
+                    console.error('Error uploading file to S3:', response.statusText);
+                  }
+                })
+                .catch(error => {
+                  console.error('Error uploading file to S3:', error);
+                });
+            } else {
+              console.error('Error retrieving presigned URL');
+            }
+          });
+        } catch (error) {
+          console.error('Error compressing image:', error);
+        }
+      } else {
+        console.error('No file selected for upload');
+      }
+    }
+  
+    async compressImage(file: File): Promise<File> {
+      const options = {
+        maxSizeMB: 1, // Limit the size to 1MB
+        maxWidthOrHeight: 60, // Maximum width or height of the compressed image
+        useWebWorker: true, // Use a web worker for the compression
+      };
+  
+      try {
+        const compressedFile = await imageCompression(file, options);
+        return compressedFile;
+      } catch (error) {
+        console.error('Error compressing file:', error);
+        throw error;
+      }
+    }
+
+
 
   closeModal(): void {
     const modalElement = document.getElementById('uploadModal');

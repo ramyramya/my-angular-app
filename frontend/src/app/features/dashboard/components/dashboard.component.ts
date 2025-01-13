@@ -54,4 +54,11 @@ export class DashboardComponent implements OnInit {
       },
     });
   }
+
+  // Download product data as a PDF when the download icon is clicked
+  downloadProductAsPDF(product: Product) {
+    console.log("called");
+    this.dashboardService.downloadProductAsPDF(product);
+  
+  }
 }
