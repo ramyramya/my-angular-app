@@ -21,6 +21,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { Product } from '../interfaces/product.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -48,10 +49,13 @@ export class DashboardService {
     return this.http.get<{success:string, count:number}>(`${this.apiUrl}/vendorCount`);
   }
 
-  // Fetch products
-  getProducts(): Observable<{success:string, products:any[]}> {
-    return this.http.get<{success:string, products:any[]}>(`${this.apiUrl}/products`);
+
+  getProducts(page: number, limit: number): Observable<{ success: string; products: Product[]; total: number; page: number; limit: number }> {
+    return this.http.get<{ success: string; products: Product[]; total: number; page: number; limit: number }>(
+      `${this.apiUrl}/products?page=${page}&limit=${limit}`
+    );
   }
+  
   
 }
 

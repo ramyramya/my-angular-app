@@ -26,3 +26,30 @@
 .table .btn:hover {
   color: #007bff;  /* Change color on hover */
 }
+
+/* Custom styling for the pagination */
+.pagination .page-item .page-link {
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.3s, transform 0.3s;
+}
+
+.pagination .page-item .page-link:hover {
+  background-color: #007bff; /* Blue color for hover effect */
+  color: #ffffff; /* White text when hovered */
+  transform: scale(1.1); /* Slight zoom effect on hover */
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #007bff; /* Active page button with blue background */
+  color: #ffffff; /* White text */
+}
+
+.pagination .page-item.disabled .page-link {
+  color: #6c757d; /* Disabled button color */
+  pointer-events: none; /* Disable clicking on the previous/next when disabled */
+}
+
+.pagination {
+  font-family: 'Arial', sans-serif;
+}

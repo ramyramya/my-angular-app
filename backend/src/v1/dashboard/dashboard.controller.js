@@ -138,7 +138,7 @@ async function getVendorCount(req, res) {
 }
 
 // Endpoint to get the list of products
-async function getProducts(req, res) {
+/*async function getProducts(req, res) {
   try {
     const products = await dashboardService.getProducts();
     res.json({ success: true, products });
@@ -146,7 +146,18 @@ async function getProducts(req, res) {
     console.error('Error fetching products:', error);
     res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
+}*/
+async function getProducts(req, res) {
+  try {
+    const { page = 1, limit = 5 } = req.query;
+    const data = await dashboardService.getProducts(Number(page), Number(limit));
+    res.json({ success: true, ...data });
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
 }
+
 
 module.exports = {
   getUserInfo,

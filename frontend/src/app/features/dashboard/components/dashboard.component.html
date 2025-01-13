@@ -90,5 +90,27 @@
         </tr>
       </tbody>
     </table>
+
+    <!-- Pagination -->
+    <nav aria-label="Page navigation" class="mt-3">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" [class.disabled]="currentPage === 1">
+          <a class="page-link" (click)="fetchPage(currentPage - 1)" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+        <li 
+          class="page-item" 
+          *ngFor="let page of pages" 
+          [class.active]="page === currentPage">
+          <a class="page-link" (click)="fetchPage(page)">{{ page }}</a>
+        </li>
+        <li class="page-item" [class.disabled]="currentPage === totalPages">
+          <a class="page-link" (click)="fetchPage(currentPage + 1)" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
   </div> <!-- End of bg-white p-4 rounded -->
 </div>
