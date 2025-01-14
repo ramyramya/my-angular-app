@@ -19,7 +19,7 @@
         <!-- Action Buttons -->
         <div>
           <button class="btn btn-outline-primary me-2">Move To</button>
-          <button class="btn btn-outline-primary me-2">
+          <button class="btn btn-outline-primary me-2" (click)="downloadAllSelected()">
             <i class="bi bi-download"></i> Download All
           </button>
           <button class="btn btn-outline-primary me-2">
@@ -65,7 +65,7 @@
       </thead>
       <tbody>
         <tr *ngFor="let product of products">
-          <td><input type="checkbox" class="form-check-input"></td>
+          <td><input type="checkbox" class="form-check-input" (change)="onCheckboxChange($event, product)"></td>
           <td>
             <img *ngIf="product.product_image" [src]="product.product_image" alt="Product Image"
               class="product-thumbnail me-2" style="width: 50px; height: 50px; object-fit: cover;">

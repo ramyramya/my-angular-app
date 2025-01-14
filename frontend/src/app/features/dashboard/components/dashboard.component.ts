@@ -1,68 +1,3 @@
-/*import { Component, OnInit } from '@angular/core';
-import { DashboardService } from '../services/dashboard.service';
-import { Product } from '../interfaces/product.interface';
-
-
-@Component({
-  selector: 'app-dashboard',
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css']
-})
-export class DashboardComponent implements OnInit {
-  products: Product[] = [];
-  vendorCount: number = 0;
-
-  currentPage: number = 1;
-  totalPages: number = 1;
-  pageSize: number = 5; // Items per page
-  totalItems: number = 0;
-  pages: number[] = [];
-
-  constructor(private dashboardService: DashboardService) {}
-
-  ngOnInit(): void {
-    this.getVendorCount();
-    this.fetchPage(this.currentPage);
-  }
-
-  getVendorCount(): void {
-    this.dashboardService.getVendorCount().subscribe({
-      next: (count) => {
-        this.vendorCount = count.count;
-      },
-      error: (error) => {
-        console.error('Error fetching vendor count:', error);
-      },
-    });
-  }
-
-  fetchPage(page: number): void {
-    if (page < 1 || (this.totalPages && page > this.totalPages)) return;
-
-    this.dashboardService.getProducts(page, this.pageSize).subscribe({
-      next: (data) => {
-        console.log(data);
-        this.products = data.products;
-        this.totalItems = data.total;
-        this.currentPage = data.page;
-        this.totalPages = Math.ceil(this.totalItems / this.pageSize);
-        this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
-        console.log(this.pages);
-      },
-      error: (error) => {
-        console.error('Error fetching products:', error);
-      },
-    });
-  }
-
-  // Download product data as a PDF when the download icon is clicked
-  downloadProductAsPDF(product: Product) {
-    console.log("called");
-    this.dashboardService.downloadProductAsPDF(product);
-  
-  }
-}*/
-
 import { Component, OnInit } from '@angular/core';
 import { DashboardService } from '../services/dashboard.service';
 import { Product } from '../interfaces/product.interface';
@@ -70,6 +5,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import * as bootstrap from 'bootstrap'
 import imageCompression from 'browser-image-compression';
 import { ToastrService } from 'ngx-toastr';
+import * as XLSX from 'xlsx';
 
 
 @Component({
@@ -92,6 +28,7 @@ export class DashboardComponent implements OnInit {
   vendors: any[] = []; // Vendors for the dropdown
   selectedFile: File | null = null; // Selected product image file
   fileUrl: string = '';
+  selectedProducts: Product[] = [];
 
   constructor(
     private dashboardService: DashboardService, private toastr: ToastrService,
@@ -372,6 +309,45 @@ export class DashboardComponent implements OnInit {
   downloadProductAsPDF(product: Product): void {
     console.log("called");
     this.dashboardService.downloadProductAsPDF(product);
+  }
+
+  // Method to handle the checkbox selection
+  onCheckboxChange(event: any, product: any): void {
+    if (event.target.checked) {
+      this.selectedProducts.push(product);
+    } else {
+      const index = this.selectedProducts.indexOf(product);
+      if (index > -1) {
+        this.selectedProducts.splice(index, 1);
+      }
+    }
+  }
+
+  // Method to download selected products as an Excel file
+  downloadAllSelected(): void {
+    if (this.selectedProducts.length === 0) {
+      alert('Please select at least one product to download.');
+      return;
+    }
+
+    const worksheetData = this.selectedProducts.map(product => ({
+      'Product Name': product.product_name,
+      'Status': product.product_status === 1 ? 'Available' : 'Sold Out',
+      'Category': product.category_name,
+      'Vendors': product.vendor_names.join(', '),
+      'Quantity': product.quantity_in_stock,
+      'Unit': product.unit
+    }));
+
+    // Create a worksheet from the data
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(worksheetData);
+    
+    // Create a workbook from the worksheet
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
+
+    // Export the workbook to an Excel file
+    XLSX.writeFile(wb, 'inventory.xlsx');
   }
 }
 
