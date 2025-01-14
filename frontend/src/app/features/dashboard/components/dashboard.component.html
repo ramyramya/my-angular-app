@@ -77,7 +77,12 @@
             <span *ngIf="product.product_status !== 1" class="badge bg-light text-dark">Sold Out</span>
           </td>
           <td>{{ product.category_name }}</td>
-          <td>{{ product.vendor_name }}</td>
+          <td>
+            <ul>
+              <li *ngFor="let vendor of product.vendor_names">{{ vendor }}</li>
+            </ul>
+          </td>
+          
           <td>{{ product.quantity_in_stock }}</td>
           <td>{{ product.unit }}</td>
           <td>

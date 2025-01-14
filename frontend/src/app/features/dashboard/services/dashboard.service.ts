@@ -75,7 +75,7 @@ export class DashboardService {
         doc.setFontSize(12);
         doc.text(`Product Name: ${product.product_name}`, 14, 30);
         doc.text(`Category: ${product.category_name}`, 14, 36);
-        doc.text(`Vendor: ${product.vendor_name}`, 14, 42);
+        doc.text(`Vendor: ${product.vendor_names}`, 14, 42);
         doc.text(`Quantity in Stock: ${product.quantity_in_stock}`, 14, 48);
         doc.text(`Unit: ${product.unit}`, 14, 54);
         doc.text(`Status: ${product.product_status === 1 ? 'Available' : 'Sold Out'}`, 14, 60);

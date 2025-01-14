@@ -27,6 +27,50 @@ async function getVendorCount() {
 }
 
 
+// async function getProducts(page = 1, limit = 5) {
+//   try {
+//     const offset = (page - 1) * limit;
+
+//     const products = await knex('products')
+//       .select(
+//         'products.product_name',
+//         'products.status AS product_status',
+//         'categories.category_name',
+//         'categories.status AS category_status',
+//         'vendors.vendor_name',
+//         'vendors.status AS vendor_status',
+//         'products.quantity_in_stock',
+//         'products.unit_price',
+//         'products.product_image',
+//         'products.unit'
+//       )
+//       .join('categories', 'products.category_id', '=', 'categories.category_id')
+//       .join('product_to_vendor', 'products.product_id', '=', 'product_to_vendor.product_id')
+//       .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id')
+//       .where('products.status', 1)
+//       .andWhere('categories.status', 1)
+//       .andWhere('vendors.status', 1)
+//       .limit(limit)
+//       .offset(offset);
+
+//     const total = await knex('products')
+//       .join('categories', 'products.category_id', '=', 'categories.category_id')
+//       .join('product_to_vendor', 'products.product_id', '=', 'product_to_vendor.product_id')
+//       .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id')
+//       .where('products.status', 1)
+//       .andWhere('categories.status', 1)
+//       .andWhere('vendors.status', 1)
+//       .count('* as total')
+//       .first();
+
+//     return { products, total: total.total, page, limit };
+//   } catch (error) {
+//     console.error('Error fetching products:', error);
+//     throw error;
+//   }
+// }
+
+
 async function getProducts(page = 1, limit = 5) {
   try {
     const offset = (page - 1) * limit;
@@ -37,8 +81,7 @@ async function getProducts(page = 1, limit = 5) {
         'products.status AS product_status',
         'categories.category_name',
         'categories.status AS category_status',
-        'vendors.vendor_name',
-        'vendors.status AS vendor_status',
+        knex.raw('GROUP_CONCAT(vendors.vendor_name) AS vendor_names'), // Use GROUP_CONCAT
         'products.quantity_in_stock',
         'products.unit_price',
         'products.product_image',
@@ -50,8 +93,23 @@ async function getProducts(page = 1, limit = 5) {
       .where('products.status', 1)
       .andWhere('categories.status', 1)
       .andWhere('vendors.status', 1)
+      .groupBy(
+        'products.product_name',
+        'products.status',
+        'categories.category_name',
+        'categories.status',
+        'products.quantity_in_stock',
+        'products.unit_price',
+        'products.product_image',
+        'products.unit'
+      )
       .limit(limit)
       .offset(offset);
+
+    // Split vendor_names into an array
+    products.forEach((product) => {
+      product.vendor_names = product.vendor_names ? product.vendor_names.split(',') : [];
+    });
 
     const total = await knex('products')
       .join('categories', 'products.category_id', '=', 'categories.category_id')
@@ -69,6 +127,7 @@ async function getProducts(page = 1, limit = 5) {
     throw error;
   }
 }
+
 // Fetch all categories
 async function getCategories() {
   try {

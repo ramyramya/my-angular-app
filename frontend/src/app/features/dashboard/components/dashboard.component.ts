@@ -208,7 +208,7 @@ export class DashboardComponent implements OnInit {
     });
   }*/
 
-    addProduct(): void {
+    /*addProduct(): void {
       if (this.addProductForm.invalid) {
         return;
       }
@@ -254,9 +254,7 @@ export class DashboardComponent implements OnInit {
               this.toastr.success('Logged in successfully!', 'Success');
             }
             // Close modal, reload product list
-            /*const modalElement = document.getElementById('addProductModal') as HTMLElement;
-            const modal = bootstrap.Modal.getInstance(modalElement);
-            modal?.hide();*/
+            
           
           },
           error: (error) => {
@@ -265,58 +263,93 @@ export class DashboardComponent implements OnInit {
         });
         
       }
-    }
+    }*/
     
-
-  async uploadProfilePhoto(): Promise<void> {
-    if (this.selectedFile) {
-      const fileName = this.selectedFile.name;
-      const fileType = this.selectedFile.type;
-
-      // Compress the selected image
-      try {
-        const compressedFile = await this.compressImage(this.selectedFile);
-        console.log('Compressed file:', compressedFile);
-
-        // Get presigned URL from backend
-        this.dashboardService.getPresignedUrl(fileName, fileType).subscribe((response: any) => {
-          if (response.success) {
-            const presignedUrl = response.presignedUrl;
-            console.log(response);
-            this.fileUrl = response.fileUrl;
-
-            // Upload the compressed file to S3 using the presigned URL
-            fetch(presignedUrl, {
-              method: 'PUT',
-              headers: {
-                'Content-Type': fileType, // Use the file's MIME type
-              },
-              body: compressedFile
-            })
-              .then(response => {
-                if (response.ok) {
-                  console.log('File uploaded successfully');
-                  console.log(this.fileUrl);
-                  //this.storeFileUrl(this.fileUrl);
-                  
-                } else {
-                  console.error('Error uploading file to S3:', response.statusText);
-                }
-              })
-              .catch(error => {
-                console.error('Error uploading file to S3:', error);
-              });
-          } else {
-            console.error('Error retrieving presigned URL');
+      async addProduct(): Promise<void> {
+        if (this.addProductForm.invalid) {
+          return;
+        }
+      
+        try {
+          if (this.selectedFile) {
+            // Wait for the upload to complete before proceeding
+            await this.uploadProfilePhoto();
+          }
+      
+          // Proceed with product submission
+          const productData = {
+            ...this.addProductForm.value,
+            productImage: this.fileUrl || '' // Use the uploaded file URL or a default value
+          };
+      
+          this.submitProduct(productData);
+        } catch (error) {
+          console.error('Error adding product:', error);
+        }
+      }
+      
+      // Function to handle product submission
+      private submitProduct(productData: any): void {
+        this.dashboardService.addProduct(productData).subscribe({
+          next: (data) => {
+            if (data.success) {
+              this.toastr.success('Product added Successfully!', 'Success');
+              // Optional: Reset form, close modal, reload product list
+            }
+          },
+          error: (error) => {
+            this.toastr.error('Product added Successfully!', 'Error');
+            console.error('Error adding product:', error);
           }
         });
-      } catch (error) {
-        console.error('Error compressing image:', error);
       }
-    } else {
+      
+  async uploadProfilePhoto(): Promise<void> {
+    if (!this.selectedFile) {
       console.error('No file selected for upload');
+      throw new Error('No file selected for upload');
+    }
+  
+    const fileName = this.selectedFile.name;
+    const fileType = this.selectedFile.type;
+  
+    try {
+      // Compress the selected image
+      const compressedFile = await this.compressImage(this.selectedFile);
+      console.log('Compressed file:', compressedFile);
+  
+      // Get presigned URL from backend
+      const response: any = await this.dashboardService.getPresignedUrl(fileName, fileType).toPromise();
+  
+      if (response.success) {
+        const presignedUrl = response.presignedUrl;
+        this.fileUrl = response.fileUrl; // Set file URL after successful response
+  
+        // Upload the compressed file to S3
+        const uploadResponse = await fetch(presignedUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': fileType, // Use the file's MIME type
+          },
+          body: compressedFile,
+        });
+  
+        if (!uploadResponse.ok) {
+          console.error('Error uploading file to S3:', uploadResponse.statusText);
+          throw new Error('File upload failed');
+        }
+  
+        console.log('File uploaded successfully:', this.fileUrl);
+      } else {
+        console.error('Error retrieving presigned URL');
+        throw new Error('Error retrieving presigned URL');
+      }
+    } catch (error) {
+      console.error('Error during file upload:', error);
+      throw error;
     }
   }
+  
 
   async compressImage(file: File): Promise<File> {
     const options = {
@@ -334,7 +367,7 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-
+  
   // Download product data as a PDF when the download icon is clicked
   downloadProductAsPDF(product: Product): void {
     console.log("called");
