@@ -26,6 +26,10 @@ router.get('/categories', authMiddleware, dashboardController.getCategories);
 router.get('/vendors', authMiddleware, dashboardController.getVendors);
 router.post('/add-product',authMiddleware, dashboardController.addProduct);
 router.post('/move-to-cart',authMiddleware, dashboardController.moveToCart);
+// Fetch all cart items for the logged-in user
+router.get('/cart', authMiddleware, dashboardController.getCartItems);
+router.put('/cart/update', authMiddleware, dashboardController.updateCartItemQuantity);
+
 
 module.exports = router;
 

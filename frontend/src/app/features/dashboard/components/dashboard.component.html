@@ -129,29 +129,45 @@
       </nav>
     </div>
 
-    <!-- Cart Table (visible when Cart is clicked) -->
-    <div *ngIf="showCart">
-      <table class="table table-striped table-bordered table-hover mb-0">
-        <thead class="table-light">
-          <tr>
-            <th>Product Name</th>
-            <th>Category</th>
-            <th>Vendors</th>
-            <th>Quantity</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Cart items will be displayed here -->
-          <tr *ngFor="let product of selectedProducts">
-            <td>{{ product.product_name }}</td>
-            <td>{{ product.category_name }}</td>
-            <td>{{getVendorNames(product.vendors) }}</td> <!-- Updated -->
-            <td>{{ product.quantity_in_stock }}</td>
-          </tr>
+    
+      
+          <!-- Cart Table (visible when Cart is clicked) -->
+          <div *ngIf="showCart">
+            <table class="table table-striped table-bordered table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Product Image</th>
+                  <th>Product Name</th>
+                  <th>Category</th>
+                  <th>Vendors</th>
+                  <th>Quantity</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Cart items will be displayed here -->
+                <tr *ngFor="let product of cartProducts">
+                  <td><img *ngIf="product.product_image" [src]="product.product_image" alt="Product Image"
+                      style="width: 50px; height: 50px; object-fit: cover;"></td>
+                  <td>{{ product.product_name }}</td>
+                  <td>{{ product.category_name }}</td>
+                  <td>{{ product.vendor_name }}</td>
+                  <td>
+                    <button class="btn btn-outline-secondary btn-sm" (click)="updateQuantity(product, -1)">-</button>
+                    <span>{{ product.quantity }}</span>
+                    <button class="btn btn-outline-secondary btn-sm" (click)="updateQuantity(product, 1)">+</button>
+                  </td>
+                  <td>
+                    <button class="btn btn-danger btn-sm" >Delete</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-        </tbody>
-      </table>
-    </div>
+
+        
+    
   </div> <!-- End of bg-white p-4 rounded -->
 
   <!-- Add Product Modal -->

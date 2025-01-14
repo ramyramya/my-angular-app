@@ -249,6 +249,102 @@ async function moveToCart(products){
   });
 };
 
+// Service method to get all cart items for a specific user
+async function getCartItems(userId){
+  try {
+    // Fetch cart items along with related product, category, and vendor information
+    const cartItems = await knex('carts')
+      .join('products', 'carts.product_id', '=', 'products.product_id')
+      .join('categories', 'products.category_id', '=', 'categories.category_id')
+      .join('product_to_vendor', 'products.product_id', '=', 'product_to_vendor.product_id')
+      .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id')
+      .select(
+        'products.product_id',
+        'products.product_name',
+        'products.product_image',
+        'categories.category_name',
+        'vendors.vendor_name',
+        'carts.quantity',
+        'carts.quantity as initialQuantity',
+        'products.quantity_in_stock'
+      )
+      .where('carts.user_id', userId);
+
+    // If no cart items are found for the user, throw an error
+    if (cartItems.length === 0) {
+      throw new Error('No cart items found for this user');
+    }
+
+    return cartItems;
+  } catch (error) {
+    console.error('Error fetching cart items in service:', error);
+    throw error; // Re-throw the error to be handled by the controller
+  }
+};
+
+// Service method to update quantity in cart and product stock within a transaction
+async function updateCartItemQuantity(productId, changeInQuantity, userId) {
+  console.log("Product_Id:", productId);
+  console.log("ChangeInQuantity:", changeInQuantity);
+  console.log("UserId:", userId);
+
+  const trx = await knex.transaction(); // Start a transaction
+
+  try {
+    // Fetch current product details from the products table
+    const product = await trx('products').where('product_id', productId).first();
+    if (!product) {
+      return { success: false, status: 404, error: 'Product not found' }; // Return error if product not found
+    }
+
+    // Calculate the new stock based on change in quantity
+    const newStock = product.quantity_in_stock - changeInQuantity;
+    if (newStock < 0) {
+      await trx.rollback(); // Rollback transaction if stock is insufficient
+      return { success: false, status: 400, error: 'Not enough stock available' };
+    }
+
+    // Fetch current cart item details
+    const cartItem = await trx('carts')
+      .where('product_id', productId)
+      .andWhere('user_id', userId)
+      .first();
+
+    if (!cartItem) {
+      await trx.rollback(); // Rollback transaction if cart item does not exist
+      return { success: false, status: 404, error: 'Cart item not found' };
+    }
+
+    // Calculate the updated cart quantity
+    const updatedCartQuantity = cartItem.quantity + changeInQuantity;
+
+    if (updatedCartQuantity < 0) {
+      await trx.rollback(); // Rollback transaction if the cart quantity is invalid
+      return { success: false, status: 400, error: 'Invalid cart quantity' };
+    }
+
+    // Update the quantity in the cart table
+    await trx('carts')
+      .where('product_id', productId)
+      .andWhere('user_id', userId)
+      .update({ quantity: updatedCartQuantity });
+
+    // Update the product's stock in the products table
+    await trx('products')
+      .where('product_id', productId)
+      .update({ quantity_in_stock: newStock });
+
+    // Commit the transaction if all operations succeed
+    await trx.commit();
+
+    return { success: true }; // Return success status
+  } catch (error) {
+    await trx.rollback(); // Rollback transaction in case of error
+    console.error('Error updating cart item and product:', error);
+    return { success: false, status: 500, error: 'Failed to update cart item and product' };
+  }
+}
+
 
 module.exports = {
   fetchUserInfo,
@@ -257,5 +353,7 @@ module.exports = {
   getCategories,
   getVendors,
   addProduct,
-  moveToCart
+  moveToCart,
+  getCartItems,
+  updateCartItemQuantity
 };

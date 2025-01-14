@@ -282,6 +282,54 @@ async function moveToCart(req, res) {
   }
 };
 
+
+// Get all cart items for a specific user
+async function getCartItems(req, res){
+  const userId = req.user.userId; // Assuming the user ID is available from authentication middleware
+
+  try {
+    // Fetch cart items along with related product, category, and vendor information
+    const cartItems = await dashboardService.getCartItems(userId);
+    console.log("Cart Items: ", cartItems);
+    res.status(200).json({ message: 'Fetched cart products', cartItems });
+  } catch (error) {
+    console.error('Error fetching cart items:', error);
+    return res.status(500).json({ error: 'Failed to fetch cart items' });
+  }
+};
+
+
+// Update quantities in the cart and product stock with transaction for multiple products
+async function updateCartItemQuantity(req, res) {
+  const secretKey = process.env.SECRET_KEY;
+  const decryptedData = CryptoJS.AES.decrypt(req.body.payload, secretKey).toString(CryptoJS.enc.Utf8);
+  const parsedData = JSON.parse(decryptedData);
+  console.log('Decrypted Data:', parsedData);
+
+  try {
+    const userId = req.user.userId;
+
+    // Iterate over the array of products and update each one
+    const updateResults = await Promise.all(
+      parsedData.map(async ({ productId, changeInQuantity }) => {
+        return await dashboardService.updateCartItemQuantity(productId, changeInQuantity, userId);
+      })
+    );
+
+    // Check for errors in the results
+    const errors = updateResults.filter((result) => !result.success);
+    if (errors.length > 0) {
+      return res.status(400).json({ error: 'Some updates failed', details: errors });
+    }
+
+    return res.status(200).json({ message: 'Cart and product updated successfully' });
+  } catch (error) {
+    console.error('Error in updating cart items and products:', error);
+    return res.status(500).json({ error: 'Failed to update cart items and products' });
+  }
+}
+
+
 module.exports = {
   getUserInfo,
   getPresignedUrl,
@@ -291,7 +339,9 @@ module.exports = {
   getCategories,
   getVendors,
   addProduct,
-  moveToCart
+  moveToCart,
+  getCartItems,
+  updateCartItemQuantity
 };
 
 

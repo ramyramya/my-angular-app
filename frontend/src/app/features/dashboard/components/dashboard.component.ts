@@ -30,6 +30,10 @@ export class DashboardComponent implements OnInit {
   selectedFile: File | null = null; // Selected product image file
   fileUrl: string = '';
   selectedProducts: Product[] = [];
+  cartProducts: any[] = [];
+  // Track changes using the difference in quantity
+  quantityChanges: { [key: number]: number } = {}; // Maps product_id to change in quantity
+  flag = 1;
 
   constructor(
     private dashboardService: DashboardService, private toastr: ToastrService,
@@ -54,6 +58,29 @@ export class DashboardComponent implements OnInit {
     this.fetchPage(this.currentPage);
     this.loadCategories();
     this.loadVendors();
+    this.fetchCartItems();
+  }
+
+  ngDoCheck(): void {
+    console.log("ngDoCheck Called");
+    if (!this.showCart && this.flag == 1) {
+      this.applyQuantityChanges(); // Call this when the cart is closed
+      this.flag = 0;
+    }
+  }
+
+  // Fetch cart items from the server
+  fetchCartItems(): void {
+    this.dashboardService.getCartItems().subscribe({
+      next: (response) => {
+        console.log("Cart Response:", response);
+        this.cartProducts = response.cartItems;
+      },
+      error: (error) => {
+        console.error('Error fetching cart items:', error);
+      }
+    }
+    );
   }
 
   toggleTable(view: string): void {
@@ -61,6 +88,7 @@ export class DashboardComponent implements OnInit {
       this.showCart = true;
     } else {
       this.showCart = false;
+      this.flag = 1;
     }
   }
 
@@ -92,8 +120,8 @@ export class DashboardComponent implements OnInit {
         console.error('Error fetching products:', error);
       },
     });
-    
-    
+
+
   }
 
   // Load categories for the dropdown
@@ -159,123 +187,123 @@ export class DashboardComponent implements OnInit {
     });
   }*/
 
-    /*addProduct(): void {
-      if (this.addProductForm.invalid) {
-        return;
-      }
-    
-      // Only proceed with adding product if there's a selected file
-      if (this.selectedFile) {
-        // Wait for the upload to complete before proceeding
-        this.uploadProfilePhoto().then(() => {
-          // Check if the fileUrl is set (file uploaded successfully)
-          if (this.fileUrl) {
-            const productData = {
-              ...this.addProductForm.value,
-              productImage: this.fileUrl
-            };
-    
-            this.dashboardService.addProduct(productData).subscribe({
-              next: (data) => {
-                if(data.success){
-                  this.toastr.success('Product added Successfully!', 'Success');
-                }
-              },
-              error: (error) => {
-                console.error('Error adding product:', error);
-              }
-            });
-          } else {
-            console.error('File upload failed. Cannot submit product data.');
-          }
-        }).catch(error => {
-          console.error('Error uploading product image:', error);
-        });
-      } else {
-        console.log("Else");
-        // If no file is selected, proceed directly with the product data
-        const productData = {
-          ...this.addProductForm.value,
-          productImage: this.fileUrl // Empty or default fileUrl if no file selected
-        };
-    
-        this.dashboardService.addProduct(productData).subscribe({
-          next: (data) => {
-            if(data.success){
-              this.toastr.success('Logged in successfully!', 'Success');
-            }
-            // Close modal, reload product list
-            
-          
-          },
-          error: (error) => {
-            console.error('Error adding product:', error);
-          }
-        });
-        
-      }
-    }*/
-    
-      async addProduct(): Promise<void> {
-        if (this.addProductForm.invalid) {
-          return;
-        }
-      
-        try {
-          if (this.selectedFile) {
-            // Wait for the upload to complete before proceeding
-            await this.uploadProfilePhoto();
-          }
-      
-          // Proceed with product submission
+  /*addProduct(): void {
+    if (this.addProductForm.invalid) {
+      return;
+    }
+  
+    // Only proceed with adding product if there's a selected file
+    if (this.selectedFile) {
+      // Wait for the upload to complete before proceeding
+      this.uploadProfilePhoto().then(() => {
+        // Check if the fileUrl is set (file uploaded successfully)
+        if (this.fileUrl) {
           const productData = {
             ...this.addProductForm.value,
-            productImage: this.fileUrl || '' // Use the uploaded file URL or a default value
+            productImage: this.fileUrl
           };
-      
-          this.submitProduct(productData);
-        } catch (error) {
+  
+          this.dashboardService.addProduct(productData).subscribe({
+            next: (data) => {
+              if(data.success){
+                this.toastr.success('Product added Successfully!', 'Success');
+              }
+            },
+            error: (error) => {
+              console.error('Error adding product:', error);
+            }
+          });
+        } else {
+          console.error('File upload failed. Cannot submit product data.');
+        }
+      }).catch(error => {
+        console.error('Error uploading product image:', error);
+      });
+    } else {
+      console.log("Else");
+      // If no file is selected, proceed directly with the product data
+      const productData = {
+        ...this.addProductForm.value,
+        productImage: this.fileUrl // Empty or default fileUrl if no file selected
+      };
+  
+      this.dashboardService.addProduct(productData).subscribe({
+        next: (data) => {
+          if(data.success){
+            this.toastr.success('Logged in successfully!', 'Success');
+          }
+          // Close modal, reload product list
+          
+        
+        },
+        error: (error) => {
           console.error('Error adding product:', error);
         }
-      }
+      });
       
-      // Function to handle product submission
-      private submitProduct(productData: any): void {
-        this.dashboardService.addProduct(productData).subscribe({
-          next: (data) => {
-            if (data.success) {
-              this.toastr.success('Product added Successfully!', 'Success');
-              // Optional: Reset form, close modal, reload product list
-            }
-          },
-          error: (error) => {
-            this.toastr.error('Product added Successfully!', 'Error');
-            console.error('Error adding product:', error);
-          }
-        });
+    }
+  }*/
+
+  async addProduct(): Promise<void> {
+    if (this.addProductForm.invalid) {
+      return;
+    }
+
+    try {
+      if (this.selectedFile) {
+        // Wait for the upload to complete before proceeding
+        await this.uploadProfilePhoto();
       }
-      
+
+      // Proceed with product submission
+      const productData = {
+        ...this.addProductForm.value,
+        productImage: this.fileUrl || '' // Use the uploaded file URL or a default value
+      };
+
+      this.submitProduct(productData);
+    } catch (error) {
+      console.error('Error adding product:', error);
+    }
+  }
+
+  // Function to handle product submission
+  private submitProduct(productData: any): void {
+    this.dashboardService.addProduct(productData).subscribe({
+      next: (data) => {
+        if (data.success) {
+          this.toastr.success('Product added Successfully!', 'Success');
+          // Optional: Reset form, close modal, reload product list
+        }
+      },
+      error: (error) => {
+        this.toastr.error('Product added Successfully!', 'Error');
+        console.error('Error adding product:', error);
+      }
+    });
+  }
+
   async uploadProfilePhoto(): Promise<void> {
     if (!this.selectedFile) {
       console.error('No file selected for upload');
       throw new Error('No file selected for upload');
     }
-  
+
     const fileName = this.selectedFile.name;
     const fileType = this.selectedFile.type;
-  
+
     try {
       // Compress the selected image
       const compressedFile = await this.compressImage(this.selectedFile);
       console.log('Compressed file:', compressedFile);
-  
+
       // Get presigned URL from backend
       const response: any = await this.dashboardService.getPresignedUrl(fileName, fileType).toPromise();
-  
+
       if (response.success) {
         const presignedUrl = response.presignedUrl;
         this.fileUrl = response.fileUrl; // Set file URL after successful response
-  
+
         // Upload the compressed file to S3
         const uploadResponse = await fetch(presignedUrl, {
           method: 'PUT',
@@ -284,12 +312,12 @@ export class DashboardComponent implements OnInit {
           },
           body: compressedFile,
         });
-  
+
         if (!uploadResponse.ok) {
           console.error('Error uploading file to S3:', uploadResponse.statusText);
           throw new Error('File upload failed');
         }
-  
+
         console.log('File uploaded successfully:', this.fileUrl);
       } else {
         console.error('Error retrieving presigned URL');
@@ -300,7 +328,7 @@ export class DashboardComponent implements OnInit {
       throw error;
     }
   }
-  
+
 
   async compressImage(file: File): Promise<File> {
     const options = {
@@ -318,7 +346,7 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  
+
   // Download product data as a PDF when the download icon is clicked
   downloadProductAsPDF(product: Product): void {
     console.log("called");
@@ -352,11 +380,11 @@ export class DashboardComponent implements OnInit {
       'Quantity': product.quantity_in_stock,
       'Unit': product.unit
     }));
-    
+
 
     // Create a worksheet from the data
     const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(worksheetData);
-    
+
     // Create a workbook from the worksheet
     const wb: XLSX.WorkBook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
@@ -372,13 +400,13 @@ export class DashboardComponent implements OnInit {
 
   adjustQuantity(product: any, change: number): void {
     const newQuantity = product.currentQuantity + change;
-    
+
     // Ensure quantity is within valid range (0 to quantity_in_stock)
     if (newQuantity >= 0 && newQuantity <= product.quantity_in_stock) {
       product.currentQuantity = newQuantity;
     }
   }
-  
+
 
   moveSelectedProducts(): void {
     const selectedProducts = this.products
@@ -389,12 +417,12 @@ export class DashboardComponent implements OnInit {
         vendor_id: product.selectedVendorId,
         quantity: product.currentQuantity,
       }));
-  
+
     if (selectedProducts.length === 0) {
       alert('Please select at least one product to move.');
       return;
     }
-  
+
     this.dashboardService.moveToCart(selectedProducts).subscribe(
       (response) => {
         console.log('Products moved to cart:', response);
@@ -407,6 +435,42 @@ export class DashboardComponent implements OnInit {
       }
     );
   }
+
+  updateQuantity(product: any, change: number): void {
+    const newQuantity = product.quantity + change;
   
+    // Only allow non-negative quantities
+    if (newQuantity >= 0) {
+      product.quantity = newQuantity; // Update the displayed quantity
+  
+      // Calculate the change in quantity from the initial state
+      const initialQuantity = product.initialQuantity || product.quantity; // Fallback if initialQuantity is not defined
+      this.quantityChanges[product.product_id] = newQuantity - initialQuantity;
+    }
+  }
+  
+  applyQuantityChanges(): void {
+    // Prepare the payload for the backend with the changes
+    const updatedProducts = Object.keys(this.quantityChanges)
+      .filter((product_id) => this.quantityChanges[+product_id] !== 0) // Exclude unchanged quantities
+      .map((product_id) => ({
+        productId: +product_id,
+        changeInQuantity: this.quantityChanges[+product_id],
+      }));
+  
+    // Call the backend to update the quantities in batch
+    if (updatedProducts.length > 0) {
+      this.dashboardService.updateCartItemQuantity(updatedProducts).subscribe({
+        next: (response) => {
+          console.log('Cart items updated successfully:', response);
+          this.fetchCartItems(); // Optionally re-fetch the cart
+          this.quantityChanges = {}; // Clear the changes after a successful update
+        },
+        error: (error) => {
+          console.error('Error updating cart items:', error);
+        }
+      });
+    }
+  }
 }
 

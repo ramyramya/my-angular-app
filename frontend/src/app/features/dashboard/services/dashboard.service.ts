@@ -86,6 +86,17 @@ doc.text(`Status: ${product.product_status === 1 ? 'Available' : 'Sold Out'}`, 1
   moveToCart(products: any[]): Observable<any> {
     return this.http.post(`${this.apiUrl}/move-to-cart`, { products });
   }
+
+  // Fetch cart items for the logged-in user
+  getCartItems(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/cart`);
+  }
+
+
+  // Method to update the cart item quantity and product stock
+  updateCartItemQuantity(product: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/cart/update`, product);
+  }
 }
 
   
