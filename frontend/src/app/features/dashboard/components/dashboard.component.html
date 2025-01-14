@@ -262,16 +262,19 @@
             </thead>
             <tbody>
               <tr *ngFor="let product of products">
-                <td><input type="checkbox" class="form-check-input"></td>
+                <td>
+                  <!-- Checkbox to select a product -->
+                  <input type="checkbox" class="form-check-input" [(ngModel)]="product.isSelected" />
+                </td>
                 <td>
                   <img *ngIf="product.product_image" [src]="product.product_image" alt="Product Image"
-                    class="product-thumbnail me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                    class="product-thumbnail me-2" style="width: 50px; height: 50px; object-fit: cover;" />
                   {{ product.product_name }}
                 </td>
                 <td>{{ product.category_name }}</td>
                 <td>
                   <!-- Vendor Dropdown -->
-                  <select class="form-select">
+                  <select class="form-select" [(ngModel)]="product.selectedVendorId">
                     <option *ngFor="let vendor of product.vendors" [value]="vendor.vendor_id">
                       {{ vendor.vendor_name }}
                     </option>
@@ -279,13 +282,14 @@
                 </td>
                 <td>
                   <!-- Quantity Adjustment with + and - buttons -->
-                  <!-- Quantity Adjustment with + and - buttons -->
-                  <button class="btn btn-outline-secondary btn-sm" (click)="adjustQuantity(product, -1)">-</button>
+                  <button class="btn btn-outline-secondary btn-sm" (click)="adjustQuantity(product, -1)">
+                    -
+                  </button>
                   <span>{{ product.currentQuantity }}</span>
-                  <button class="btn btn-outline-secondary btn-sm" (click)="adjustQuantity(product, 1)">+</button>
-
+                  <button class="btn btn-outline-secondary btn-sm" (click)="adjustQuantity(product, 1)">
+                    +
+                  </button>
                 </td>
-
               </tr>
             </tbody>
           </table>
@@ -312,7 +316,9 @@
         <div class="modal-footer">
           <!-- Cancel and Move Buttons -->
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary">Move</button>
+          <button type="button" class="btn btn-primary" (click)="moveSelectedProducts()">
+            Move
+          </button>
         </div>
       </div>
     </div>

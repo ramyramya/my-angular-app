@@ -46,7 +46,7 @@ async function getUserInfo(req, res) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    res.json({ success: true, username: userInfo.username, thumbnail: userInfo.thumbnail,email: userInfo.email });
+    res.json({ success: true, userId: userId, username: userInfo.username, thumbnail: userInfo.thumbnail, email: userInfo.email });
   } catch (error) {
     console.error('Error fetching user info:', error);
     res.status(500).json({ success: false, message: 'Internal Server Error' });
@@ -72,7 +72,7 @@ async function getPresignedUrl(req, res) {
     const s3Params = {
       Bucket: process.env.AWS_S3_BUCKET_NAME,
       Key: `profile-photos/${fileName}`,
-      Expires: 60*50, // URL expiration time in seconds
+      Expires: 60 * 50, // URL expiration time in seconds
       ContentType: fileType,
       //ACL: 'public-read' // Make the file publicly accessible
     };
@@ -94,7 +94,7 @@ async function updateProfilePic(req, res) {
   try {
     const userId = req.user.userId; // Extracted from token or session
     console.log("userId: ", userId);
-    
+
     // Decrypt the incoming encrypted payload
     const secretKey = process.env.SECRET_KEY;  // Make sure your secret key is in .env
     const decryptedData = CryptoJS.AES.decrypt(req.body.payload, secretKey).toString(CryptoJS.enc.Utf8);
@@ -113,7 +113,7 @@ async function updateProfilePic(req, res) {
       .where('id', userId)  // Assuming the user's ID is in the 'id' field
       .update({ thumbnail: fileUrl });
 
-      console.log("updated user: ", updatedUser);
+    console.log("updated user: ", updatedUser);
 
     if (updatedUser > 0) {
       return res.json({ success: true, message: 'Profile picture updated successfully', user: updatedUser[0] });
@@ -161,6 +161,7 @@ async function getCategories(req, res) {
 // Get vendors
 async function getVendors(req, res) {
   try {
+    //const userId = req.user.userId;
     const vendors = await dashboardService.getVendors();
     res.json({ success: true, vendors });
   } catch (error) {
@@ -215,7 +216,7 @@ async function getVendors(req, res) {
 
 async function addProduct(req, res) {
   try {
-    const secretKey = process.env.SECRET_KEY; 
+    const secretKey = process.env.SECRET_KEY;
     const decryptedData = CryptoJS.AES.decrypt(req.body.payload, secretKey).toString(CryptoJS.enc.Utf8);
     console.log('Decrypted Data:', decryptedData);
 
@@ -264,6 +265,23 @@ async function addProduct(req, res) {
 }
 
 
+async function moveToCart(req, res) {
+  const secretKey = process.env.SECRET_KEY;
+  const decryptedData = CryptoJS.AES.decrypt(req.body.payload, secretKey).toString(CryptoJS.enc.Utf8);
+  parsedData = JSON.parse(decryptedData);
+  console.log('Decrypted Data:', parsedData);
+  const  products  = parsedData.products;
+  console.log("products: ", products);
+
+  try {
+    await dashboardService.moveToCart(products);
+    res.status(200).json({ message: 'Products moved to cart successfully.' });
+  } catch (error) {
+    console.error('Error moving products to cart:', error);
+    res.status(500).json({ error: 'Failed to move products to cart.' });
+  }
+};
+
 module.exports = {
   getUserInfo,
   getPresignedUrl,
@@ -272,7 +290,8 @@ module.exports = {
   getProducts,
   getCategories,
   getVendors,
-  addProduct
+  addProduct,
+  moveToCart
 };
 
 

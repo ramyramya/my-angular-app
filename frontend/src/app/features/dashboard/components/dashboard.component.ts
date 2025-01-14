@@ -23,7 +23,7 @@ export class DashboardComponent implements OnInit {
   pageSize: number = 5; // Items per page
   totalItems: number = 0;
   pages: number[] = [];
-
+  userId !: number;
   addProductForm: FormGroup; // Form group for the Add Product modal
   categories: any[] = []; // Categories for the dropdown
   vendors: any[] = []; // Vendors for the dropdown
@@ -47,6 +47,9 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.dashboardService.getUserData().subscribe(data => {
+      this.userId = data.userId;
+    });
     this.getVendorCount();
     this.fetchPage(this.currentPage);
     this.loadCategories();
@@ -374,6 +377,35 @@ export class DashboardComponent implements OnInit {
     if (newQuantity >= 0 && newQuantity <= product.quantity_in_stock) {
       product.currentQuantity = newQuantity;
     }
+  }
+  
+
+  moveSelectedProducts(): void {
+    const selectedProducts = this.products
+      .filter(product => product.isSelected)
+      .map(product => ({
+        user_id: this.userId,
+        product_id: product.product_id,
+        vendor_id: product.selectedVendorId,
+        quantity: product.currentQuantity,
+      }));
+  
+    if (selectedProducts.length === 0) {
+      alert('Please select at least one product to move.');
+      return;
+    }
+  
+    this.dashboardService.moveToCart(selectedProducts).subscribe(
+      (response) => {
+        console.log('Products moved to cart:', response);
+        alert('Products moved successfully!');
+        // Optionally refresh products or update UI
+      },
+      (error) => {
+        console.error('Error moving products to cart:', error);
+        alert('Failed to move products.');
+      }
+    );
   }
   
 }

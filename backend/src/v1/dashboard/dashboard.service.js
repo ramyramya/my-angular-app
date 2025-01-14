@@ -132,6 +132,8 @@ async function getProducts(page = 1, limit = 5) {
     products.forEach((product) => {
       product.vendors = productVendorMap[product.product_id] || [];
       product.currentQuantity = 0;
+      isSelected = false;
+      selectedVendorId = null;
     });
 
     // Fetch total count
@@ -221,10 +223,32 @@ async function addProduct(productData) {
   }
 }
 
-module.exports = {
-  addProduct,
-  // Other service methods...
+async function moveToCart(products){
+  return knex.transaction(async (trx) => {
+    for (const product of products) {
+      const { user_id, product_id, vendor_id, quantity } = product;
+
+      // Insert or update the cart entry
+      const existingCartItem = await trx('carts')
+        .where({ user_id, product_id, vendor_id })
+        .first();
+
+      if (existingCartItem) {
+        await trx('carts')
+          .where({ id: existingCartItem.id })
+          .update({ quantity: existingCartItem.quantity + quantity });
+      } else {
+        await trx('carts').insert({ user_id, product_id, vendor_id, quantity });
+      }
+
+      // Decrease the quantity in stock
+      await trx('products')
+        .where({ product_id })
+        .decrement('quantity_in_stock', quantity);
+    }
+  });
 };
+
 
 module.exports = {
   fetchUserInfo,
@@ -232,5 +256,6 @@ module.exports = {
   getProducts,
   getCategories,
   getVendors,
-  addProduct
+  addProduct,
+  moveToCart
 };

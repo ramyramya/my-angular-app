@@ -16,5 +16,7 @@ export interface Vendor {
     unit_price: number;
     vendors: Vendor[]; // Updated from vendor_names (array of strings) to a detailed array of Vendor objects
     currentQuantity:number;
+    isSelected: boolean;
+    selectedVendorId : number|null;
   }
   

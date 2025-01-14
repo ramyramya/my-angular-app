@@ -25,6 +25,7 @@ router.get('/products', authMiddleware, dashboardController.getProducts);
 router.get('/categories', authMiddleware, dashboardController.getCategories);
 router.get('/vendors', authMiddleware, dashboardController.getVendors);
 router.post('/add-product',authMiddleware, dashboardController.addProduct);
+router.post('/move-to-cart',authMiddleware, dashboardController.moveToCart);
 
 module.exports = router;
 

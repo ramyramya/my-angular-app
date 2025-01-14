@@ -14,8 +14,8 @@ export class DashboardService {
 
   constructor(private http: HttpClient) { }
 
-  getUserData(): Observable<{ username: string; thumbnail: string; email: string }> {
-    return this.http.get<{ username: string; thumbnail: string; email: string }>(`${this.apiUrl}/user-info`);
+  getUserData(): Observable<{ userId: number, username: string; thumbnail: string; email: string }> {
+    return this.http.get<{ userId: number, username: string; thumbnail: string; email: string }>(`${this.apiUrl}/user-info`);
   }
 
   getPresignedUrl(fileName: string, fileType: string): Observable<any> {
@@ -80,6 +80,11 @@ doc.text(`Status: ${product.product_status === 1 ? 'Available' : 'Sold Out'}`, 1
   
   addProduct(productData: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/add-product`, productData);
+  }
+
+
+  moveToCart(products: any[]): Observable<any> {
+    return this.http.post(`${this.apiUrl}/move-to-cart`, { products });
   }
 }
 
