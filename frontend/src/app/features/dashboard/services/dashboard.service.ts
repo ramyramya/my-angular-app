@@ -52,14 +52,19 @@ export class DashboardService {
         doc.setFontSize(18);
         doc.text('Product Details', 14, 22);
         
-        // Add product details
-        doc.setFontSize(12);
-        doc.text(`Product Name: ${product.product_name}`, 14, 30);
-        doc.text(`Category: ${product.category_name}`, 14, 36);
-        doc.text(`Vendor: ${product.vendor_names}`, 14, 42);
-        doc.text(`Quantity in Stock: ${product.quantity_in_stock}`, 14, 48);
-        doc.text(`Unit: ${product.unit}`, 14, 54);
-        doc.text(`Status: ${product.product_status === 1 ? 'Available' : 'Sold Out'}`, 14, 60);
+        /// Add product details
+doc.setFontSize(12);
+doc.text(`Product Name: ${product.product_name}`, 14, 30);
+doc.text(`Category: ${product.category_name}`, 14, 36);
+
+// Map vendor names from the vendors array and join them
+const vendorNames = product.vendors.map(vendor => vendor.vendor_name).join(', ');
+doc.text(`Vendors: ${vendorNames}`, 14, 42);
+
+doc.text(`Quantity in Stock: ${product.quantity_in_stock}`, 14, 48);
+doc.text(`Unit: ${product.unit}`, 14, 54);
+doc.text(`Status: ${product.product_status === 1 ? 'Available' : 'Sold Out'}`, 14, 60);
+
         
         // Save the PDF file
         doc.save(`${product.product_name}_details.pdf`);

@@ -75,27 +75,28 @@ async function getProducts(page = 1, limit = 5) {
   try {
     const offset = (page - 1) * limit;
 
+    // Fetch the main product data
     const products = await knex('products')
       .select(
+        'products.product_id',
         'products.product_name',
         'products.status AS product_status',
+        'categories.category_id',
         'categories.category_name',
         'categories.status AS category_status',
-        knex.raw('GROUP_CONCAT(vendors.vendor_name) AS vendor_names'), // Use GROUP_CONCAT
         'products.quantity_in_stock',
         'products.unit_price',
         'products.product_image',
         'products.unit'
       )
       .join('categories', 'products.category_id', '=', 'categories.category_id')
-      .join('product_to_vendor', 'products.product_id', '=', 'product_to_vendor.product_id')
-      .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id')
       .where('products.status', 1)
       .andWhere('categories.status', 1)
-      .andWhere('vendors.status', 1)
       .groupBy(
+        'products.product_id',
         'products.product_name',
         'products.status',
+        'categories.category_id',
         'categories.category_name',
         'categories.status',
         'products.quantity_in_stock',
@@ -106,11 +107,34 @@ async function getProducts(page = 1, limit = 5) {
       .limit(limit)
       .offset(offset);
 
-    // Split vendor_names into an array
-    products.forEach((product) => {
-      product.vendor_names = product.vendor_names ? product.vendor_names.split(',') : [];
+    // Fetch vendors for each product
+    const productIds = products.map((product) => product.product_id);
+
+    const vendors = await knex('product_to_vendor')
+      .select('product_to_vendor.product_id', 'vendors.vendor_id', 'vendors.vendor_name')
+      .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id')
+      .whereIn('product_to_vendor.product_id', productIds)
+      .andWhere('vendors.status', 1);
+
+    // Map vendors to their respective products
+    const productVendorMap = {};
+    vendors.forEach((vendor) => {
+      if (!productVendorMap[vendor.product_id]) {
+        productVendorMap[vendor.product_id] = [];
+      }
+      productVendorMap[vendor.product_id].push({
+        vendor_id: vendor.vendor_id,
+        vendor_name: vendor.vendor_name,
+      });
     });
 
+    // Add the vendors array to each product
+    products.forEach((product) => {
+      product.vendors = productVendorMap[product.product_id] || [];
+      product.currentQuantity = 0;
+    });
+
+    // Fetch total count
     const total = await knex('products')
       .join('categories', 'products.category_id', '=', 'categories.category_id')
       .join('product_to_vendor', 'products.product_id', '=', 'product_to_vendor.product_id')
@@ -118,7 +142,7 @@ async function getProducts(page = 1, limit = 5) {
       .where('products.status', 1)
       .andWhere('categories.status', 1)
       .andWhere('vendors.status', 1)
-      .count('* as total')
+      .countDistinct('products.product_id as total')
       .first();
 
     return { products, total: total.total, page, limit };

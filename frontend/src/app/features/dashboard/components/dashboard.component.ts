@@ -14,6 +14,7 @@ import * as XLSX from 'xlsx';
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
+  showCart: boolean = false;  // Flag to control which table is shown
   products: Product[] = [];
   vendorCount: number = 0;
 
@@ -52,6 +53,14 @@ export class DashboardComponent implements OnInit {
     this.loadVendors();
   }
 
+  toggleTable(view: string): void {
+    if (view === 'cart') {
+      this.showCart = true;
+    } else {
+      this.showCart = false;
+    }
+  }
+
   getVendorCount(): void {
     this.dashboardService.getVendorCount().subscribe({
       next: (count) => {
@@ -80,6 +89,8 @@ export class DashboardComponent implements OnInit {
         console.error('Error fetching products:', error);
       },
     });
+    
+    
   }
 
   // Load categories for the dropdown
@@ -334,10 +345,11 @@ export class DashboardComponent implements OnInit {
       'Product Name': product.product_name,
       'Status': product.product_status === 1 ? 'Available' : 'Sold Out',
       'Category': product.category_name,
-      'Vendors': product.vendor_names.join(', '),
+      'Vendors': product.vendors.map(vendor => vendor.vendor_name).join(', '), // Map vendor names from the vendors array
       'Quantity': product.quantity_in_stock,
       'Unit': product.unit
     }));
+    
 
     // Create a worksheet from the data
     const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(worksheetData);
@@ -349,5 +361,20 @@ export class DashboardComponent implements OnInit {
     // Export the workbook to an Excel file
     XLSX.writeFile(wb, 'inventory.xlsx');
   }
+
+
+  getVendorNames(vendors: { vendor_id: number; vendor_name: string }[]): string {
+    return vendors.map(vendor => vendor.vendor_name).join(', ');
+  }
+
+  adjustQuantity(product: any, change: number): void {
+    const newQuantity = product.currentQuantity + change;
+    
+    // Ensure quantity is within valid range (0 to quantity_in_stock)
+    if (newQuantity >= 0 && newQuantity <= product.quantity_in_stock) {
+      product.currentQuantity = newQuantity;
+    }
+  }
+  
 }
 
