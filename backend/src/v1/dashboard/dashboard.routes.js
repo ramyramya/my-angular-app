@@ -32,6 +32,8 @@ router.put('/cart/update', authMiddleware, dashboardController.updateCartItemQua
 router.put('/delete_product/:productId', authMiddleware, dashboardController.deleteProductAndVendors);
 router.put('/products/:product_id', authMiddleware, dashboardController.updateProductAndVendors);
 router.delete('/delete-cart-item/:cartId', authMiddleware, dashboardController.deleteCartItem);
+router.post('/update-products', authMiddleware, dashboardController.updateProducts);
+
 
 module.exports = router;
 

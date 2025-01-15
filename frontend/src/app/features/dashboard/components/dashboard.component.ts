@@ -45,6 +45,8 @@ export class DashboardComponent implements OnInit {
   editSelectedFile: File | null = null; // File selected for editing
   fileUrlForEdit: string = ''; // Uploaded file URL for editing
 
+  fileData: any[] = [];
+
   constructor(
     private dashboardService: DashboardService, private toastr: ToastrService,
     private fb: FormBuilder // Form builder service for reactive forms
@@ -528,6 +530,39 @@ export class DashboardComponent implements OnInit {
       // Refresh the cart after deletion
       this.fetchCartPage(this.currentCartPage);
     });
+  }
+
+
+  onFileChange(event: any): void {
+    const target: DataTransfer = <DataTransfer>(event.target);
+    if (target.files.length !== 1) {
+      console.error('Cannot use multiple files');
+      return;
+    }
+
+    const reader: FileReader = new FileReader();
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      const arrayBuffer: ArrayBuffer = e.target!.result as ArrayBuffer;
+      const workbook: XLSX.WorkBook = XLSX.read(arrayBuffer, { type: 'array' });
+      const sheetName: string = workbook.SheetNames[0];
+      const sheetData: XLSX.WorkSheet = workbook.Sheets[sheetName];
+      this.fileData = XLSX.utils.sheet_to_json(sheetData);
+      console.log('Parsed Data:', this.fileData);
+    };
+    reader.readAsArrayBuffer(target.files[0]);
+  }
+
+
+  // Upload data to backend
+  uploadData(): void {
+    if (this.fileData.length > 0) {
+      this.dashboardService.updateProductData(this.fileData).subscribe({
+        next: (res) => console.log('Data updated successfully!', res),
+        error: (err) => console.error('Error updating data!', err),
+      });
+    } else {
+      alert('Please upload a valid file!');
+    }
   }
 
 }

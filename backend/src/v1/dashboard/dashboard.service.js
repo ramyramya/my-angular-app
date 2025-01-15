@@ -501,7 +501,7 @@ async function deleteProductAndVendors(productId) {
   }
 }
 
-
+//for edit in row
 async function updateProductAndVendors(product_id, productData) {
   const { productImage, product_name, quantity_in_stock, selectedVendorIds, unit, category_id } = productData;
 
@@ -532,7 +532,8 @@ async function updateProductAndVendors(product_id, productData) {
       // Insert new associations for selected vendors
       const vendorAssociations = vendors.map(vendor_id => ({
         product_id,
-        vendor_id
+        vendor_id,
+        status: 1  // Set the status to 1 (active)
       }));
 
       await trx('product_to_vendor').insert(vendorAssociations);
@@ -587,6 +588,78 @@ async function deleteCartItem(cartId) {
 }
 
 
+async function updateProductDetails(data) {
+  for (const row of data) {
+    const { 
+      Category: categoryName, 
+      'Product Name': productName, 
+      Quantity: quantity, 
+      Status: status, 
+      Unit: unit, 
+      Vendors: vendors 
+    } = row;
+
+    // Map status to a numeric value
+    const productStatus = status === "Available" ? 1 : 99;
+
+    // Find or create category
+    let categoryId;
+    const [existingCategory] = await knex('categories').where({ category_name: categoryName });
+    if (!existingCategory) {
+      [categoryId] = await knex('categories').insert({ category_name: categoryName, status: 1 });
+    } else {
+      categoryId = existingCategory.category_id;
+    }
+
+    // Find or create product
+    let productId;
+    const [existingProduct] = await knex('products')
+      .where({ product_name: productName, category_id: categoryId });
+    if (!existingProduct) {
+      [productId] = await knex('products').insert({
+        product_name: productName,
+        category_id: categoryId,
+        quantity_in_stock: quantity,
+        unit_price: unit,
+        status: productStatus,
+      });
+    } else {
+      productId = existingProduct.product_id;
+      await knex('products')
+        .where({ product_id: productId })
+        .update({
+          quantity_in_stock: quantity,
+          unit_price: unit,
+          status: productStatus,
+        });
+    }
+
+    // Process vendors
+    const vendorNames = vendors.split(',').map((v) => v.trim());
+    for (const vendorName of vendorNames) {
+      let vendorId;
+      const [existingVendor] = await knex('vendors').where({ vendor_name: vendorName });
+      if (!existingVendor) {
+        [vendorId] = await knex('vendors').insert({ vendor_name: vendorName, status: 1 });
+      } else {
+        vendorId = existingVendor.vendor_id;
+      }
+
+      // Link product to vendor if not already linked
+      const [existingLink] = await knex('product_to_vendor')
+        .where({ product_id: productId, vendor_id: vendorId });
+      if (!existingLink) {
+        await knex('product_to_vendor').insert({
+          product_id: productId,
+          vendor_id: vendorId,
+          status: 1, // Set status to 1 in the product_to_vendor table
+        });
+      }
+    }
+  }
+}
+
+
 module.exports = {
   fetchUserInfo,
   getVendorCount,
@@ -599,5 +672,6 @@ module.exports = {
   updateCartItemQuantity,
   deleteProductAndVendors,
   updateProductAndVendors,
-  deleteCartItem
+  deleteCartItem,
+  updateProductDetails
 };

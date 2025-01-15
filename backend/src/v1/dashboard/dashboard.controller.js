@@ -270,7 +270,7 @@ async function moveToCart(req, res) {
   const decryptedData = CryptoJS.AES.decrypt(req.body.payload, secretKey).toString(CryptoJS.enc.Utf8);
   parsedData = JSON.parse(decryptedData);
   console.log('Decrypted Data:', parsedData);
-  const  products  = parsedData.products;
+  const products = parsedData.products;
   console.log("products: ", products);
 
   try {
@@ -343,8 +343,8 @@ async function updateCartItemQuantity(req, res) {
 }
 
 
-async function deleteProductAndVendors(req, res){
-  console.log("Params in Function: ",req.params);
+async function deleteProductAndVendors(req, res) {
+  console.log("Params in Function: ", req.params);
   const { productId } = req.params;
 
   try {
@@ -359,7 +359,7 @@ async function deleteProductAndVendors(req, res){
   }
 }
 
-async function updateProductAndVendors(req, res){
+async function updateProductAndVendors(req, res) {
 
   const secretKey = process.env.SECRET_KEY;
   const decryptedData = CryptoJS.AES.decrypt(req.body.payload, secretKey).toString(CryptoJS.enc.Utf8);
@@ -375,7 +375,7 @@ async function updateProductAndVendors(req, res){
   try {
     // Call the service function to update product and vendor association
     const result = await dashboardService.updateProductAndVendors(product_id, productData);
-    
+
     if (result.success) {
       return res.status(200).json({ success: true, message: 'Product updated successfully!' });
     } else {
@@ -387,9 +387,9 @@ async function updateProductAndVendors(req, res){
   }
 }
 
-async function deleteCartItem(req, res){
+async function deleteCartItem(req, res) {
   const { cartId } = req.params;
-  console.log("cartId: ",  cartId);
+  console.log("cartId: ", cartId);
 
   try {
     await dashboardService.deleteCartItem(cartId);
@@ -398,6 +398,27 @@ async function deleteCartItem(req, res){
     console.error('Error deleting cart item:', error);
     res.status(500).json({ message: 'Failed to delete cart item' });
   }
+}
+
+
+async function updateProducts(req, res) {
+  try {
+    const secretKey = process.env.SECRET_KEY;
+    const decryptedData = CryptoJS.AES.decrypt(req.body.payload, secretKey).toString(CryptoJS.enc.Utf8);
+    const parsedData = JSON.parse(decryptedData);
+    console.log('Decrypted Data:', parsedData);
+    const { data } = parsedData;
+    if (!Array.isArray(data) || data.length === 0) {
+      return res.status(400).json({ message: 'Invalid data!' });
+    }
+
+    await dashboardService.updateProductDetails(data);
+    res.status(200).json({ message: 'Products updated successfully!' });
+  } catch (error) {
+    console.error('Error updating products:', error);
+    res.status(500).json({ message: 'Failed to update products!', error });
+  }
+
 }
 
 module.exports = {
@@ -414,7 +435,8 @@ module.exports = {
   updateCartItemQuantity,
   deleteProductAndVendors,
   updateProductAndVendors,
-  deleteCartItem
+  deleteCartItem,
+  updateProducts
 };
 
 

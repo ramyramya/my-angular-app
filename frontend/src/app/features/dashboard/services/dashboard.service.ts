@@ -112,6 +112,11 @@ doc.text(`Status: ${product.product_status === 1 ? 'Available' : 'Sold Out'}`, 1
   deleteCartItem(cartId: number): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/delete-cart-item/${cartId}`);
   }
+
+  updateProductData(data: any[]): Observable<any> {
+    return this.http.post(`${this.apiUrl}/update-products`, { data });
+  }
+  
 }
 
   
