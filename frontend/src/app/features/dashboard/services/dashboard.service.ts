@@ -43,7 +43,7 @@ export class DashboardService {
   downloadProductAsPDF(product: Product){
     const doc = new jsPDF();
         // Add product image (Make sure `product.image_url` is the correct URL or base64 string)
-        const imageUrl = "https://akv-interns.s3.ap-south-1.amazonaws.com/profile-photos/kurkure.jpg";
+        const imageUrl = product.product_image;
         console.log(imageUrl);  // Example: product.product_image_url (URL of the image)
   
         // Add the image to the PDF (adjust the parameters as needed)
