@@ -18,6 +18,6 @@ export interface Vendor {
     currentQuantity:number;
     isSelected: boolean;
     selectedVendorId : number|null;
-    selectedVendorIds : number[]|null;
+    selectedVendorIds : number[]| [];
   }
   

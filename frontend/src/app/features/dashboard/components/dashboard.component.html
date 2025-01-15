@@ -97,18 +97,9 @@
               </div>
             </td>
             <td>
-              <div *ngIf="!selectedProductForEdit || product.product_id !== selectedProductForEdit.product_id">
-                <span>{{ product.product_status === 1 ? 'Available' : 'Sold Out' }}</span>
-              </div>
-              <div *ngIf="selectedProductForEdit && product.product_id === selectedProductForEdit.product_id">
-                <select
-                  [(ngModel)]="selectedProductForEdit.product_status"
-                  class="form-control"
-                >
-                  <option [value]="1">Available</option>
-                  <option [value]="0">Sold Out</option>
-                </select>
-              </div>
+              <!-- Available or Sold Out status with colored boxes -->
+              <span *ngIf="product.quantity_in_stock >= 1" class="badge bg-success text-white">Available</span>
+              <span *ngIf="product.quantity_in_stock <= 0" class="badge bg-light text-dark">Sold Out</span>
             </td>
             <td>
               <div *ngIf="!selectedProductForEdit || product.product_id !== selectedProductForEdit.product_id">
@@ -135,12 +126,14 @@
                 <select
                   [(ngModel)]="selectedProductForEdit.selectedVendorIds"
                   class="form-control"
+                  multiple
                 >
                   <option *ngFor="let vendor of vendors" [value]="vendor.vendor_id">
                     {{ vendor.vendor_name }}
                   </option>
                 </select>
               </div>
+              
             </td>
             <td>
               <div *ngIf="!selectedProductForEdit || product.product_id !== selectedProductForEdit.product_id">

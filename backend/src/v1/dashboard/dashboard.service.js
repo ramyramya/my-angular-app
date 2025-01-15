@@ -276,20 +276,87 @@ async function moveToCart(products){
   });
 };
 
-// 
+
+// async function getCartItems(userId, page = 1, limit = 5) {
+//   try {
+//     const offset = (page - 1) * limit;
+
+//     // Fetch the total count of cart items for the user where quantity > 0
+//     const totalItemsQuery = knex('carts')
+//       .count('* as total')
+//       .where('user_id', userId)
+//       .andWhere('quantity', '>', 0) // Ensure quantity is greater than 0
+//       .first();
+
+//     // Fetch cart items along with related product, category, and vendor information where quantity > 0
+//     const cartItemsQuery = knex('carts')
+//       .join('products', 'carts.product_id', '=', 'products.product_id')
+//       .join('categories', 'products.category_id', '=', 'categories.category_id')
+//       .join('product_to_vendor', function () {
+//         this.on('products.product_id', '=', 'product_to_vendor.product_id')
+//           .andOn('carts.vendor_id', '=', 'product_to_vendor.vendor_id'); // Ensure cart's vendor matches
+//       })
+//       .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id') // Tie to correct vendor
+//       .select(
+//         'products.product_id',
+//         'products.product_name',
+//         'products.product_image',
+//         'categories.category_name',
+//         'vendors.vendor_name',
+//         'carts.quantity',
+//         'carts.quantity as initialQuantity',
+//         'products.quantity_in_stock'
+//       )
+//       .where('carts.user_id', userId)
+//       .andWhere('carts.quantity', '>', 0) // Ensure quantity is greater than 0
+//       .groupBy(
+//         'carts.id', // Group by unique cart ID to prevent duplicate rows
+//         'products.product_id',
+//         'products.product_name',
+//         'products.product_image',
+//         'categories.category_name',
+//         'vendors.vendor_name',
+//         'carts.quantity',
+//         'products.quantity_in_stock'
+//       )
+//       .limit(limit)
+//       .offset(offset);
+
+//     // Execute both queries in parallel
+//     const [totalResult, cartItems] = await Promise.all([totalItemsQuery, cartItemsQuery]);
+
+//     // If no cart items are found for the user, throw an error
+//     if (!totalResult.total || cartItems.length === 0) {
+//       throw new Error('No cart items found for this user');
+//     }
+
+//     return {
+//       total: totalResult.total,
+//       page,
+//       limit,
+//       products: cartItems,
+//     };
+//   } catch (error) {
+//     console.error('Error fetching cart items in service:', error);
+//     throw error; // Re-throw the error to be handled by the controller
+//   }
+// }
+
 
 async function getCartItems(userId, page = 1, limit = 5) {
   try {
     const offset = (page - 1) * limit;
 
-    // Fetch the total count of cart items for the user where quantity > 0
+    // Fetch the total count of cart items for the user where quantity > 0 and product is available
     const totalItemsQuery = knex('carts')
       .count('* as total')
       .where('user_id', userId)
       .andWhere('quantity', '>', 0) // Ensure quantity is greater than 0
+      .join('products', 'carts.product_id', '=', 'products.product_id')
+      .andWhere('products.status', '=', 1) // Ensure the product is available
       .first();
 
-    // Fetch cart items along with related product, category, and vendor information where quantity > 0
+    // Fetch cart items along with related product, category, and vendor information where quantity > 0 and product is available
     const cartItemsQuery = knex('carts')
       .join('products', 'carts.product_id', '=', 'products.product_id')
       .join('categories', 'products.category_id', '=', 'categories.category_id')
@@ -310,6 +377,7 @@ async function getCartItems(userId, page = 1, limit = 5) {
       )
       .where('carts.user_id', userId)
       .andWhere('carts.quantity', '>', 0) // Ensure quantity is greater than 0
+      .andWhere('products.status', '=', 1) // Ensure the product is available
       .groupBy(
         'carts.id', // Group by unique cart ID to prevent duplicate rows
         'products.product_id',
@@ -433,7 +501,6 @@ async function deleteProductAndVendors(productId) {
 }
 
 
-// Update product and associate vendors with a transaction
 async function updateProductAndVendors(product_id, productData) {
   const { productImage, product_name, quantity_in_stock, selectedVendorIds, unit, category_id } = productData;
 
@@ -451,16 +518,17 @@ async function updateProductAndVendors(product_id, productData) {
         category_id
       });
 
-    // First, delete existing product_vendor associations
-    await trx('product_to_vendor')
-      .where('product_id', product_id)
-      .del();
+    // Check if selectedVendorIds is not empty before modifying the product_to_vendor table
+    if (selectedVendorIds && selectedVendorIds.length > 0) {
+      // First, delete existing product_vendor associations
+      await trx('product_to_vendor')
+        .where('product_id', product_id)
+        .del();
 
-    // Ensure selectedVendorIds is an array
-    const vendors = Array.isArray(selectedVendorIds) ? selectedVendorIds : [selectedVendorIds];
+      // Ensure selectedVendorIds is an array
+      const vendors = Array.isArray(selectedVendorIds) ? selectedVendorIds : [selectedVendorIds];
 
-    // Insert new associations for selected vendors
-    if (vendors.length > 0) {
+      // Insert new associations for selected vendors
       const vendorAssociations = vendors.map(vendor_id => ({
         product_id,
         vendor_id
@@ -479,7 +547,6 @@ async function updateProductAndVendors(product_id, productData) {
     throw error;  // Rethrow the error to be caught by the controller
   }
 }
-
 
 module.exports = {
   fetchUserInfo,

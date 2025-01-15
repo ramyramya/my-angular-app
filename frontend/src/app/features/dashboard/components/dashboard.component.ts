@@ -420,7 +420,8 @@ export class DashboardComponent implements OnInit {
   }
 
   openEditProduct(product: Product): void {
-    this.selectedProductForEdit = { ...product }; // Create a copy to avoid mutating the original
+    this.selectedProductForEdit = { ...product}; // Create a copy to avoid mutating the original
+    this.selectedProductForEdit.selectedVendorIds = [];;
     console.log("Initial product: ", product);
   }
 
