@@ -74,39 +74,137 @@
           <tr *ngFor="let product of products">
             <td><input type="checkbox" class="form-check-input" (change)="onCheckboxChange($event, product)"></td>
             <td>
-              <img *ngIf="product.product_image" [src]="product.product_image" alt="Product Image"
-                class="product-thumbnail me-2" style="width: 50px; height: 50px; object-fit: cover;">
-              {{ product.product_name }}
+              <div *ngIf="!selectedProductForEdit || product.product_id !== selectedProductForEdit.product_id">
+                <img
+                  *ngIf="product.product_image"
+                  [src]="product.product_image"
+                  alt="Product Image"
+                  class="product-thumbnail me-2"
+                  style="width: 50px; height: 50px; object-fit: cover;"
+                />
+                <span>{{ product.product_name }}</span>
+              </div>
+              <div *ngIf="selectedProductForEdit && product.product_id === selectedProductForEdit.product_id">
+                <input
+                  type="file"
+                  (change)="onEditFileSelect($event)"
+                  class="form-control"
+                />
+                <input
+                  [(ngModel)]="selectedProductForEdit.product_name"
+                  class="form-control"
+                />
+              </div>
             </td>
             <td>
-              <!-- Available or Sold Out status with colored boxes -->
-              <span *ngIf="product.quantity_in_stock >= 1" class="badge bg-success text-white">Available</span>
-              <span *ngIf="product.quantity_in_stock <= 0" class="badge bg-light text-dark">Sold Out</span>
+              <div *ngIf="!selectedProductForEdit || product.product_id !== selectedProductForEdit.product_id">
+                <span>{{ product.product_status === 1 ? 'Available' : 'Sold Out' }}</span>
+              </div>
+              <div *ngIf="selectedProductForEdit && product.product_id === selectedProductForEdit.product_id">
+                <select
+                  [(ngModel)]="selectedProductForEdit.product_status"
+                  class="form-control"
+                >
+                  <option [value]="1">Available</option>
+                  <option [value]="0">Sold Out</option>
+                </select>
+              </div>
             </td>
-            <td>{{ product.category_name }}</td>
             <td>
-              <ul>
-                <li *ngFor="let vendor of product.vendors">{{ vendor.vendor_name }}</li>
-              </ul>
+              <div *ngIf="!selectedProductForEdit || product.product_id !== selectedProductForEdit.product_id">
+                <span>{{ product.category_name }}</span>
+              </div>
+              <div *ngIf="selectedProductForEdit && product.product_id === selectedProductForEdit.product_id">
+                <select
+                  [(ngModel)]="selectedProductForEdit.category_id"
+                  class="form-control"
+                >
+                  <option *ngFor="let category of categories" [value]="category.category_id">
+                    {{ category.category_name }}
+                  </option>
+                </select>
+              </div>
             </td>
-
-            <td>{{ product.quantity_in_stock }}</td>
-            <td>{{ product.unit }}</td>
             <td>
-              <!-- Action Icons for Download, Edit, and Delete without borders -->
+              <div *ngIf="!selectedProductForEdit || product.product_id !== selectedProductForEdit.product_id">
+                <ul>
+                  <li *ngFor="let vendor of product.vendors">{{ vendor.vendor_name }}</li>
+                </ul>
+              </div>
+              <div *ngIf="selectedProductForEdit && product.product_id === selectedProductForEdit.product_id">
+                <select
+                  [(ngModel)]="selectedProductForEdit.selectedVendorIds"
+                  class="form-control"
+                >
+                  <option *ngFor="let vendor of vendors" [value]="vendor.vendor_id">
+                    {{ vendor.vendor_name }}
+                  </option>
+                </select>
+              </div>
+            </td>
+            <td>
+              <div *ngIf="!selectedProductForEdit || product.product_id !== selectedProductForEdit.product_id">
+                <span>{{ product.quantity_in_stock }}</span>
+              </div>
+              <div *ngIf="selectedProductForEdit && product.product_id === selectedProductForEdit.product_id">
+                <input
+                  [(ngModel)]="selectedProductForEdit.quantity_in_stock"
+                  type="number"
+                  class="form-control"
+                />
+              </div>
+            </td>
+            <td>
+              <div *ngIf="!selectedProductForEdit || product.product_id !== selectedProductForEdit.product_id">
+                <span>{{ product.unit }}</span>
+              </div>
+              <div *ngIf="selectedProductForEdit && product.product_id === selectedProductForEdit.product_id">
+                <input
+                  [(ngModel)]="selectedProductForEdit.unit"
+                  class="form-control"
+                />
+              </div>
+            </td>
+            
+            <td>
+              <button
+                *ngIf="product.product_id === selectedProductForEdit?.product_id"
+                class="btn btn-sm btn-success"
+                (click)="saveEditedProduct()"
+              >
+                Save
+              </button>
+              <button
+                *ngIf="product.product_id === selectedProductForEdit?.product_id"
+                class="btn btn-sm btn-secondary"
+                (click)="cancelEdit()"
+              >
+                Cancel
+              </button>
               <button class="btn btn-sm me-2" style="border: none; background: transparent;"
                 (click)="downloadProductAsPDF(product)">
                 <i class="bi bi-download"></i>
               </button>
-              <button class="btn btn-sm me-2" style="border: none; background: transparent;">
+
+              <button
+                
+                class="btn btn-sm"
+                style="border: none; background: transparent;"
+                (click)="openEditProduct(product)"
+              >
                 <i class="bi bi-pencil"></i>
               </button>
-              <button class="btn btn-sm" style="border: none; background: transparent;" (click)="onDeleteProduct(product)">
+              <button
+                class="btn btn-sm"
+                style="border: none; background: transparent;"
+                (click)="onDeleteProduct(product)"
+              >
                 <i class="bi bi-trash"></i>
               </button>
             </td>
           </tr>
         </tbody>
+        
       </table>
 
       <!-- Pagination -->

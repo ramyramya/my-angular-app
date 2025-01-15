@@ -102,6 +102,11 @@ doc.text(`Status: ${product.product_status === 1 ? 'Available' : 'Sold Out'}`, 1
   deleteProduct(productId: number): Observable<any> {
     return this.http.put(`${this.apiUrl}/delete_product/${productId}`,{});
   }
+
+  updateProduct(productData: any): Observable<any> {
+    const url = `${this.apiUrl}/products/${productData.product_id}`;
+    return this.http.put(url, productData);
+  }
 }
 
   

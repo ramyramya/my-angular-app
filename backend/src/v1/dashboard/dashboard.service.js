@@ -433,6 +433,54 @@ async function deleteProductAndVendors(productId) {
 }
 
 
+// Update product and associate vendors with a transaction
+async function updateProductAndVendors(product_id, productData) {
+  const { productImage, product_name, quantity_in_stock, selectedVendorIds, unit, category_id } = productData;
+
+  const trx = await knex.transaction();
+
+  try {
+    // Update the product table
+    await trx('products')
+      .where('product_id', product_id)
+      .update({
+        product_image: productImage || null,  // If productImage is provided, update it; otherwise, set as null
+        product_name,
+        quantity_in_stock,
+        unit,
+        category_id
+      });
+
+    // First, delete existing product_vendor associations
+    await trx('product_to_vendor')
+      .where('product_id', product_id)
+      .del();
+
+    // Ensure selectedVendorIds is an array
+    const vendors = Array.isArray(selectedVendorIds) ? selectedVendorIds : [selectedVendorIds];
+
+    // Insert new associations for selected vendors
+    if (vendors.length > 0) {
+      const vendorAssociations = vendors.map(vendor_id => ({
+        product_id,
+        vendor_id
+      }));
+
+      await trx('product_to_vendor').insert(vendorAssociations);
+    }
+
+    // Commit the transaction
+    await trx.commit();
+    return { success: true };
+  } catch (error) {
+    // Rollback the transaction in case of an error
+    await trx.rollback();
+    console.error('Error during product update transaction:', error);
+    throw error;  // Rethrow the error to be caught by the controller
+  }
+}
+
+
 module.exports = {
   fetchUserInfo,
   getVendorCount,
@@ -443,5 +491,6 @@ module.exports = {
   moveToCart,
   getCartItems,
   updateCartItemQuantity,
-  deleteProductAndVendors
+  deleteProductAndVendors,
+  updateProductAndVendors
 };

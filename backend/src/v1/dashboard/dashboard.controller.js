@@ -359,6 +359,33 @@ async function deleteProductAndVendors(req, res){
   }
 }
 
+async function updateProductAndVendors(req, res){
+
+  const secretKey = process.env.SECRET_KEY;
+  const decryptedData = CryptoJS.AES.decrypt(req.body.payload, secretKey).toString(CryptoJS.enc.Utf8);
+  const parsedData = JSON.parse(decryptedData);
+  console.log('Decrypted Data:', parsedData);
+  const productData = parsedData;
+  const { product_id } = req.params;
+
+  if (!productData || !product_id) {
+    return res.status(400).json({ error: 'Invalid data' });
+  }
+
+  try {
+    // Call the service function to update product and vendor association
+    const result = await dashboardService.updateProductAndVendors(product_id, productData);
+    
+    if (result.success) {
+      return res.status(200).json({ success: true, message: 'Product updated successfully!' });
+    } else {
+      return res.status(500).json({ success: false, message: 'Error updating product' });
+    }
+  } catch (error) {
+    console.error('Error updating product:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+}
 
 module.exports = {
   getUserInfo,
@@ -372,7 +399,8 @@ module.exports = {
   moveToCart,
   getCartItems,
   updateCartItemQuantity,
-  deleteProductAndVendors
+  deleteProductAndVendors,
+  updateProductAndVendors
 };
 
 

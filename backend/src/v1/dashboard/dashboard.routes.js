@@ -31,6 +31,8 @@ router.get('/cart', authMiddleware, dashboardController.getCartItems);
 router.put('/cart/update', authMiddleware, dashboardController.updateCartItemQuantity);
 router.put('/delete_product/:productId', authMiddleware, dashboardController.deleteProductAndVendors);
 
+router.put('/products/:product_id', authMiddleware, dashboardController.updateProductAndVendors);
+
 
 module.exports = router;
 

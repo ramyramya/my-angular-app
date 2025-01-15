@@ -41,6 +41,9 @@ export class DashboardComponent implements OnInit {
   // Track changes using the difference in quantity
   quantityChanges: { [key: number]: number } = {}; // Maps product_id to change in quantity
   flag = 1;
+  selectedProductForEdit: Product | null = null;
+  editSelectedFile: File | null = null; // File selected for editing
+  fileUrlForEdit: string = ''; // Uploaded file URL for editing
 
   constructor(
     private dashboardService: DashboardService, private toastr: ToastrService,
@@ -76,19 +79,6 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  // // Fetch cart items from the server
-  // fetchCartItems(): void {
-  //   this.dashboardService.getCartItems().subscribe({
-  //     next: (response) => {
-  //       console.log("Cart Response:", response);
-  //       this.cartProducts = response.cartItems;
-  //     },
-  //     error: (error) => {
-  //       console.error('Error fetching cart items:', error);
-  //     }
-  //   }
-  //   );
-  // }
 
   toggleTable(view: string): void {
     if (view === 'cart') {
@@ -180,95 +170,6 @@ export class DashboardComponent implements OnInit {
   onFileSelect(event: any): void {
     this.selectedFile = event.target.files[0];
   }
-
-  // Add a new product
-  /*addProduct(): void {
-    if (this.addProductForm.invalid) {
-      return;
-    }
-
-    
-    if (this.selectedFile) {
-      this.uploadProfilePhoto();
-    }
-
-    const productData = {
-      ...this.addProductForm.value,
-      productImage: this.fileUrl
-    }
-
-    this.dashboardService.addProduct(productData).subscribe({
-      next: () => {
-        // Close modal, reload product list
-        const modalElement = document.getElementById('addProductModal') as HTMLElement;
-        const modal = bootstrap.Modal.getInstance(modalElement);
-        modal?.hide();
-
-        // Reload the product list
-        this.fetchPage(this.currentPage);
-      },
-      error: (error) => {
-        console.error('Error adding product:', error);
-      }
-    });
-  }*/
-
-  /*addProduct(): void {
-    if (this.addProductForm.invalid) {
-      return;
-    }
-  
-    // Only proceed with adding product if there's a selected file
-    if (this.selectedFile) {
-      // Wait for the upload to complete before proceeding
-      this.uploadProfilePhoto().then(() => {
-        // Check if the fileUrl is set (file uploaded successfully)
-        if (this.fileUrl) {
-          const productData = {
-            ...this.addProductForm.value,
-            productImage: this.fileUrl
-          };
-  
-          this.dashboardService.addProduct(productData).subscribe({
-            next: (data) => {
-              if(data.success){
-                this.toastr.success('Product added Successfully!', 'Success');
-              }
-            },
-            error: (error) => {
-              console.error('Error adding product:', error);
-            }
-          });
-        } else {
-          console.error('File upload failed. Cannot submit product data.');
-        }
-      }).catch(error => {
-        console.error('Error uploading product image:', error);
-      });
-    } else {
-      console.log("Else");
-      // If no file is selected, proceed directly with the product data
-      const productData = {
-        ...this.addProductForm.value,
-        productImage: this.fileUrl // Empty or default fileUrl if no file selected
-      };
-  
-      this.dashboardService.addProduct(productData).subscribe({
-        next: (data) => {
-          if(data.success){
-            this.toastr.success('Logged in successfully!', 'Success');
-          }
-          // Close modal, reload product list
-          
-        
-        },
-        error: (error) => {
-          console.error('Error adding product:', error);
-        }
-      });
-      
-    }
-  }*/
 
   async addProduct(): Promise<void> {
     if (this.addProductForm.invalid) {
@@ -503,8 +404,6 @@ export class DashboardComponent implements OnInit {
     this.selectedProducts = [];
   }
 
-
-
   onDeleteProduct(product: any) {
     if (confirm('Are you sure you want to delete this product?')) {
       this.dashboardService.deleteProduct(product.product_id)
@@ -519,5 +418,107 @@ export class DashboardComponent implements OnInit {
         );
     }
   }
+
+  openEditProduct(product: Product): void {
+    this.selectedProductForEdit = { ...product }; // Create a copy to avoid mutating the original
+    console.log("Initial product: ", product);
+  }
+
+  onEditFileSelect(event: any): void {
+    this.editSelectedFile = event.target.files[0];
+  }
+
+  async saveEditedProduct(): Promise<void> {
+    if (!this.selectedProductForEdit) {
+      return;
+    }
+
+    try {
+      if (this.editSelectedFile) {
+        // Upload the image before updating the product
+        await this.uploadEditedProductImage();
+      }
+
+      const updatedProductData = {
+        ...this.selectedProductForEdit,
+        productImage: this.fileUrlForEdit || this.selectedProductForEdit.product_image // Use uploaded URL or existing image
+      };
+
+      this.submitUpdatedProduct(updatedProductData);
+    } catch (error) {
+      console.error('Error saving edited product:', error);
+      this.toastr.error('Error saving product!', 'Error');
+    }
+  }
+
+  private submitUpdatedProduct(updatedProductData: any): void {
+    console.log("Submitted Product is: ", updatedProductData);
+    this.dashboardService.updateProduct(updatedProductData).subscribe({
+      next: (data) => {
+        if (data.success) {
+          this.toastr.success('Product updated Successfully!', 'Success');
+          this.fetchPage(this.currentPage); // Reload the product list
+          this.selectedProductForEdit = null; // Reset editing state
+        }
+      },
+      error: (error) => {
+        console.error('Error updating product:', error);
+        this.toastr.error('Error updating product!', 'Error');
+      }
+    });
+  }
+
+
+  async uploadEditedProductImage(): Promise<void> {
+    if (!this.editSelectedFile) {
+      console.error('No file selected for upload');
+      throw new Error('No file selected for upload');
+    }
+
+    const fileName = this.editSelectedFile.name;
+    const fileType = this.editSelectedFile.type;
+
+    try {
+      // Compress the selected image
+      const compressedFile = await this.compressImage(this.editSelectedFile);
+      console.log('Compressed file:', compressedFile);
+
+      // Get presigned URL from backend
+      const response: any = await this.dashboardService.getPresignedUrl(fileName, fileType).toPromise();
+
+      if (response.success) {
+        const presignedUrl = response.presignedUrl;
+        this.fileUrlForEdit = response.fileUrl; // Set file URL after successful response
+
+        // Upload the compressed file to S3
+        const uploadResponse = await fetch(presignedUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': fileType, // Use the file's MIME type
+          },
+          body: compressedFile,
+        });
+
+        if (!uploadResponse.ok) {
+          console.error('Error uploading file to S3:', uploadResponse.statusText);
+          throw new Error('File upload failed');
+        }
+
+        console.log('File uploaded successfully:', this.fileUrlForEdit);
+      } else {
+        console.error('Error retrieving presigned URL');
+        throw new Error('Error retrieving presigned URL');
+      }
+    } catch (error) {
+      console.error('Error during file upload:', error);
+      throw error;
+    }
+  }
+
+  cancelEdit(): void {
+    this.selectedProductForEdit = null;
+    this.editSelectedFile = null;
+  }
+
 }
 
