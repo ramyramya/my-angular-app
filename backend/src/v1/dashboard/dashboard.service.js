@@ -282,45 +282,46 @@ async function getCartItems(userId, page = 1, limit = 5) {
   try {
     const offset = (page - 1) * limit;
 
-    // Fetch the total count of cart items for the user
+    // Fetch the total count of cart items for the user where quantity > 0
     const totalItemsQuery = knex('carts')
       .count('* as total')
       .where('user_id', userId)
+      .andWhere('quantity', '>', 0) // Ensure quantity is greater than 0
       .first();
 
-    // Fetch cart items along with related product, category, and vendor information
+    // Fetch cart items along with related product, category, and vendor information where quantity > 0
     const cartItemsQuery = knex('carts')
-  .join('products', 'carts.product_id', '=', 'products.product_id')
-  .join('categories', 'products.category_id', '=', 'categories.category_id')
-  .join('product_to_vendor', function () {
-    this.on('products.product_id', '=', 'product_to_vendor.product_id')
-      .andOn('carts.vendor_id', '=', 'product_to_vendor.vendor_id'); // Ensure cart's vendor matches
-  })
-  .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id') // Tie to correct vendor
-  .select(
-    'products.product_id',
-    'products.product_name',
-    'products.product_image',
-    'categories.category_name',
-    'vendors.vendor_name',
-    'carts.quantity',
-    'carts.quantity as initialQuantity',
-    'products.quantity_in_stock'
-  )
-  .where('carts.user_id', userId)
-  .groupBy(
-    'carts.id', // Group by unique cart ID to prevent duplicate rows
-    'products.product_id',
-    'products.product_name',
-    'products.product_image',
-    'categories.category_name',
-    'vendors.vendor_name',
-    'carts.quantity',
-    'products.quantity_in_stock'
-  )
-  .limit(limit)
-  .offset(offset);
-
+      .join('products', 'carts.product_id', '=', 'products.product_id')
+      .join('categories', 'products.category_id', '=', 'categories.category_id')
+      .join('product_to_vendor', function () {
+        this.on('products.product_id', '=', 'product_to_vendor.product_id')
+          .andOn('carts.vendor_id', '=', 'product_to_vendor.vendor_id'); // Ensure cart's vendor matches
+      })
+      .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id') // Tie to correct vendor
+      .select(
+        'products.product_id',
+        'products.product_name',
+        'products.product_image',
+        'categories.category_name',
+        'vendors.vendor_name',
+        'carts.quantity',
+        'carts.quantity as initialQuantity',
+        'products.quantity_in_stock'
+      )
+      .where('carts.user_id', userId)
+      .andWhere('carts.quantity', '>', 0) // Ensure quantity is greater than 0
+      .groupBy(
+        'carts.id', // Group by unique cart ID to prevent duplicate rows
+        'products.product_id',
+        'products.product_name',
+        'products.product_image',
+        'categories.category_name',
+        'vendors.vendor_name',
+        'carts.quantity',
+        'products.quantity_in_stock'
+      )
+      .limit(limit)
+      .offset(offset);
 
     // Execute both queries in parallel
     const [totalResult, cartItems] = await Promise.all([totalItemsQuery, cartItemsQuery]);
@@ -341,6 +342,7 @@ async function getCartItems(userId, page = 1, limit = 5) {
     throw error; // Re-throw the error to be handled by the controller
   }
 }
+
 
 
 // Service method to update quantity in cart and product stock within a transaction
@@ -407,6 +409,30 @@ async function updateCartItemQuantity(productId, changeInQuantity, userId) {
 }
 
 
+async function deleteProductAndVendors(productId) {
+  try {
+    // Start a transaction to ensure atomicity
+    return await knex.transaction(async (trx) => {
+      // Update the status of the product in the products table
+      await trx('products')
+        .where('product_id', productId)
+        .update({ status: 99 });
+
+      // Update the status of the product in the product_to_vendor table
+      await trx('product_to_vendor')
+        .where('product_id', productId)
+        .update({ status: 99 });
+
+      // Commit the transaction
+      await trx.commit();
+    });
+  } catch (error) {
+    console.error('Error updating product status in service:', error);
+    throw error; // Re-throw the error to be handled by the controller
+  }
+}
+
+
 module.exports = {
   fetchUserInfo,
   getVendorCount,
@@ -416,5 +442,6 @@ module.exports = {
   addProduct,
   moveToCart,
   getCartItems,
-  updateCartItemQuantity
+  updateCartItemQuantity,
+  deleteProductAndVendors
 };

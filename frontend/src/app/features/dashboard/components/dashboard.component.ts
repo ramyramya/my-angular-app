@@ -502,5 +502,22 @@ export class DashboardComponent implements OnInit {
   clearSelectedProducts(){
     this.selectedProducts = [];
   }
+
+
+
+  onDeleteProduct(product: any) {
+    if (confirm('Are you sure you want to delete this product?')) {
+      this.dashboardService.deleteProduct(product.product_id)
+        .subscribe({
+          next: (response) => {
+            // Handle success response (e.g., refresh the product list)
+            this.products = this.products.filter(p => p.product_id !== product.product_id);
+          },
+          error: (error) => {
+            console.error('Error deleting product:', error);
+          }}
+        );
+    }
+  }
 }
 

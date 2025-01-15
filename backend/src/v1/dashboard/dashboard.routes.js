@@ -29,6 +29,7 @@ router.post('/move-to-cart',authMiddleware, dashboardController.moveToCart);
 // Fetch all cart items for the logged-in user
 router.get('/cart', authMiddleware, dashboardController.getCartItems);
 router.put('/cart/update', authMiddleware, dashboardController.updateCartItemQuantity);
+router.put('/delete_product/:productId', authMiddleware, dashboardController.deleteProductAndVendors);
 
 
 module.exports = router;

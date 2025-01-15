@@ -343,6 +343,23 @@ async function updateCartItemQuantity(req, res) {
 }
 
 
+async function deleteProductAndVendors(req, res){
+  console.log("Params in Function: ",req.params);
+  const { productId } = req.params;
+
+  try {
+    // Call the service method to delete the product and update vendor status
+    await dashboardService.deleteProductAndVendors(productId);
+
+    // Send a success response
+    res.status(200).send({ message: 'Product and related vendor status updated successfully' });
+  } catch (error) {
+    console.error('Error in controller:', error);
+    res.status(500).send({ message: 'Error deleting product' });
+  }
+}
+
+
 module.exports = {
   getUserInfo,
   getPresignedUrl,
@@ -354,7 +371,8 @@ module.exports = {
   addProduct,
   moveToCart,
   getCartItems,
-  updateCartItemQuantity
+  updateCartItemQuantity,
+  deleteProductAndVendors
 };
 
 
