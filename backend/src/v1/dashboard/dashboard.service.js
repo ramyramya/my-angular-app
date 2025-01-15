@@ -366,6 +366,7 @@ async function getCartItems(userId, page = 1, limit = 5) {
       })
       .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id') // Tie to correct vendor
       .select(
+        'carts.id',
         'products.product_id',
         'products.product_name',
         'products.product_image',
@@ -548,6 +549,44 @@ async function updateProductAndVendors(product_id, productData) {
   }
 }
 
+
+// Function to delete cart item and update product stock
+async function deleteCartItem(cartId) {
+  const trx = await knex.transaction();
+
+  try {
+    // Fetch the cart item to get product_id and quantity
+    const cartItem = await trx('carts')
+      .where('id', cartId)
+      .first();
+
+    if (!cartItem) {
+      throw new Error('Cart item not found');
+    }
+
+    const { product_id, quantity } = cartItem;
+
+    // Update the quantity in stock for the product
+    await trx('products')
+      .where('product_id', product_id)
+      .increment('quantity_in_stock', quantity); // Add the quantity back to the product stock
+
+    // Delete the cart item
+    await trx('carts')
+      .where('id', cartId)
+      .del();
+
+    // Commit the transaction
+    await trx.commit();
+  } catch (error) {
+    // Rollback the transaction in case of an error
+    await trx.rollback();
+    console.error('Error during cart item deletion:', error);
+    throw error;  // Rethrow the error to be caught by the controller
+  }
+}
+
+
 module.exports = {
   fetchUserInfo,
   getVendorCount,
@@ -559,5 +598,6 @@ module.exports = {
   getCartItems,
   updateCartItemQuantity,
   deleteProductAndVendors,
-  updateProductAndVendors
+  updateProductAndVendors,
+  deleteCartItem
 };

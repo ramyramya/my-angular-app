@@ -30,9 +30,8 @@ router.post('/move-to-cart',authMiddleware, dashboardController.moveToCart);
 router.get('/cart', authMiddleware, dashboardController.getCartItems);
 router.put('/cart/update', authMiddleware, dashboardController.updateCartItemQuantity);
 router.put('/delete_product/:productId', authMiddleware, dashboardController.deleteProductAndVendors);
-
 router.put('/products/:product_id', authMiddleware, dashboardController.updateProductAndVendors);
-
+router.delete('/delete-cart-item/:cartId', authMiddleware, dashboardController.deleteCartItem);
 
 module.exports = router;
 

@@ -133,6 +133,7 @@ export class DashboardComponent implements OnInit {
         this.totalCartPages = Math.ceil(this.totalCartItems / this.cartPageSize);
         this.cartPages = Array.from({ length: this.totalCartPages }, (_, i) => i + 1);
         console.log(this.cartPages);
+        console.log("cartProducts: ", this.cartProducts);
       },
       error: (error) => {
         console.error('Error fetching cartProducts:', error);
@@ -519,6 +520,14 @@ export class DashboardComponent implements OnInit {
   cancelEdit(): void {
     this.selectedProductForEdit = null;
     this.editSelectedFile = null;
+  }
+
+  deleteCartItem(cartId: number): void {
+    console.log("cartId: ",  cartId);
+    this.dashboardService.deleteCartItem(cartId).subscribe(() => {
+      // Refresh the cart after deletion
+      this.fetchCartPage(this.currentCartPage);
+    });
   }
 
 }

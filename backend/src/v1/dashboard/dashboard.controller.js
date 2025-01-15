@@ -387,6 +387,19 @@ async function updateProductAndVendors(req, res){
   }
 }
 
+async function deleteCartItem(req, res){
+  const { cartId } = req.params;
+  console.log("cartId: ",  cartId);
+
+  try {
+    await dashboardService.deleteCartItem(cartId);
+    res.status(200).json({ message: 'Cart item deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting cart item:', error);
+    res.status(500).json({ message: 'Failed to delete cart item' });
+  }
+}
+
 module.exports = {
   getUserInfo,
   getPresignedUrl,
@@ -400,7 +413,8 @@ module.exports = {
   getCartItems,
   updateCartItemQuantity,
   deleteProductAndVendors,
-  updateProductAndVendors
+  updateProductAndVendors,
+  deleteCartItem
 };
 
 
