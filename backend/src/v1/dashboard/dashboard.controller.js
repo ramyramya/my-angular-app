@@ -283,20 +283,33 @@ async function moveToCart(req, res) {
 };
 
 
-// Get all cart items for a specific user
-async function getCartItems(req, res){
-  const userId = req.user.userId; // Assuming the user ID is available from authentication middleware
+// // Get all cart items for a specific user
+// async function getCartItems(req, res){
+//   const userId = req.user.userId; // Assuming the user ID is available from authentication middleware
 
+//   try {
+//     // Fetch cart items along with related product, category, and vendor information
+//     const cartItems = await dashboardService.getCartItems(userId);
+//     console.log("Cart Items: ", cartItems);
+//     res.status(200).json({ message: 'Fetched cart products', cartItems });
+//   } catch (error) {
+//     console.error('Error fetching cart items:', error);
+//     return res.status(500).json({ error: 'Failed to fetch cart items' });
+//   }
+// };
+
+
+async function getCartItems(req, res) {
   try {
-    // Fetch cart items along with related product, category, and vendor information
-    const cartItems = await dashboardService.getCartItems(userId);
-    console.log("Cart Items: ", cartItems);
-    res.status(200).json({ message: 'Fetched cart products', cartItems });
+    const { page = 1, limit = 5 } = req.query;
+    const userId = req.user.userId;
+    const data = await dashboardService.getCartItems(userId, Number(page), Number(limit));
+    res.json({ success: true, ...data });
   } catch (error) {
-    console.error('Error fetching cart items:', error);
-    return res.status(500).json({ error: 'Failed to fetch cart items' });
+    console.error('Error fetching cartProducts:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
-};
+}
 
 
 // Update quantities in the cart and product stock with transaction for multiple products

@@ -88,8 +88,8 @@ doc.text(`Status: ${product.product_status === 1 ? 'Available' : 'Sold Out'}`, 1
   }
 
   // Fetch cart items for the logged-in user
-  getCartItems(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/cart`);
+  getCartItems(page: number, limit: number): Observable<{ success: string; products: Product[]; total: number; page: number; limit: number }> {
+    return this.http.get<{ success: string; products: Product[]; total: number; page: number; limit: number }>(`${this.apiUrl}/cart?page=${page}&limit=${limit}`);
   }
 
 

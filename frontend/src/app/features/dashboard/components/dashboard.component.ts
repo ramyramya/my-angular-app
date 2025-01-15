@@ -23,6 +23,13 @@ export class DashboardComponent implements OnInit {
   pageSize: number = 5; // Items per page
   totalItems: number = 0;
   pages: number[] = [];
+
+  currentCartPage: number = 1;
+  totalCartPages: number = 1;
+  cartPageSize: number = 5; // Items per page
+  totalCartItems: number = 0;
+  cartPages: number[] = [];
+
   userId !: number;
   addProductForm: FormGroup; // Form group for the Add Product modal
   categories: any[] = []; // Categories for the dropdown
@@ -58,7 +65,7 @@ export class DashboardComponent implements OnInit {
     this.fetchPage(this.currentPage);
     this.loadCategories();
     this.loadVendors();
-    this.fetchCartItems();
+    this.fetchCartPage(this.currentCartPage);
   }
 
   ngDoCheck(): void {
@@ -69,19 +76,19 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  // Fetch cart items from the server
-  fetchCartItems(): void {
-    this.dashboardService.getCartItems().subscribe({
-      next: (response) => {
-        console.log("Cart Response:", response);
-        this.cartProducts = response.cartItems;
-      },
-      error: (error) => {
-        console.error('Error fetching cart items:', error);
-      }
-    }
-    );
-  }
+  // // Fetch cart items from the server
+  // fetchCartItems(): void {
+  //   this.dashboardService.getCartItems().subscribe({
+  //     next: (response) => {
+  //       console.log("Cart Response:", response);
+  //       this.cartProducts = response.cartItems;
+  //     },
+  //     error: (error) => {
+  //       console.error('Error fetching cart items:', error);
+  //     }
+  //   }
+  //   );
+  // }
 
   toggleTable(view: string): void {
     if (view === 'cart') {
@@ -122,6 +129,25 @@ export class DashboardComponent implements OnInit {
     });
 
 
+  }
+
+  fetchCartPage(page: number): void {
+    if (page < 1 || (this.totalCartPages && page > this.totalCartPages)) return;
+
+    this.dashboardService.getCartItems(page, this.cartPageSize).subscribe({
+      next: (data) => {
+        console.log(data);
+        this.cartProducts = data.products;
+        this.totalCartItems = data.total;
+        this.currentCartPage = data.page;
+        this.totalCartPages = Math.ceil(this.totalCartItems / this.cartPageSize);
+        this.cartPages = Array.from({ length: this.totalCartPages }, (_, i) => i + 1);
+        console.log(this.cartPages);
+      },
+      error: (error) => {
+        console.error('Error fetching cartProducts:', error);
+      },
+    });
   }
 
   // Load categories for the dropdown
@@ -409,7 +435,7 @@ export class DashboardComponent implements OnInit {
 
 
   moveSelectedProducts(): void {
-    const selectedProducts = this.products
+    const selectedProducts = this.selectedProducts
       .filter(product => product.isSelected)
       .map(product => ({
         user_id: this.userId,
@@ -463,7 +489,7 @@ export class DashboardComponent implements OnInit {
       this.dashboardService.updateCartItemQuantity(updatedProducts).subscribe({
         next: (response) => {
           console.log('Cart items updated successfully:', response);
-          this.fetchCartItems(); // Optionally re-fetch the cart
+          this.fetchCartPage(this.currentCartPage); // Optionally re-fetch the cart
           this.quantityChanges = {}; // Clear the changes after a successful update
         },
         error: (error) => {
@@ -471,6 +497,10 @@ export class DashboardComponent implements OnInit {
         }
       });
     }
+  }
+
+  clearSelectedProducts(){
+    this.selectedProducts = [];
   }
 }
 

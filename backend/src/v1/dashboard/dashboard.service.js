@@ -27,32 +27,74 @@ async function getVendorCount() {
 }
 
 
+
+
 // async function getProducts(page = 1, limit = 5) {
 //   try {
 //     const offset = (page - 1) * limit;
 
+//     // Fetch the main product data
 //     const products = await knex('products')
 //       .select(
+//         'products.product_id',
 //         'products.product_name',
 //         'products.status AS product_status',
+//         'categories.category_id',
 //         'categories.category_name',
 //         'categories.status AS category_status',
-//         'vendors.vendor_name',
-//         'vendors.status AS vendor_status',
 //         'products.quantity_in_stock',
 //         'products.unit_price',
 //         'products.product_image',
 //         'products.unit'
 //       )
 //       .join('categories', 'products.category_id', '=', 'categories.category_id')
-//       .join('product_to_vendor', 'products.product_id', '=', 'product_to_vendor.product_id')
-//       .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id')
 //       .where('products.status', 1)
 //       .andWhere('categories.status', 1)
-//       .andWhere('vendors.status', 1)
+//       .groupBy(
+//         'products.product_id',
+//         'products.product_name',
+//         'products.status',
+//         'categories.category_id',
+//         'categories.category_name',
+//         'categories.status',
+//         'products.quantity_in_stock',
+//         'products.unit_price',
+//         'products.product_image',
+//         'products.unit'
+//       )
 //       .limit(limit)
 //       .offset(offset);
 
+//     // Fetch vendors for each product
+//     const productIds = products.map((product) => product.product_id);
+
+//     const vendors = await knex('product_to_vendor')
+//       .select('product_to_vendor.product_id', 'vendors.vendor_id', 'vendors.vendor_name')
+//       .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id')
+//       .whereIn('product_to_vendor.product_id', productIds)
+//       .andWhere('vendors.status', 1);
+
+//     // Map vendors to their respective products
+//     const productVendorMap = {};
+//     vendors.forEach((vendor) => {
+//       if (!productVendorMap[vendor.product_id]) {
+//         productVendorMap[vendor.product_id] = [];
+//       }
+//       productVendorMap[vendor.product_id].push({
+//         vendor_id: vendor.vendor_id,
+//         vendor_name: vendor.vendor_name,
+//       });
+//     });
+
+//     // Add the vendors array to each product
+//     products.forEach((product) => {
+//       product.vendors = productVendorMap[product.product_id] || [];
+//       product.currentQuantity = 0;
+//       isSelected = false;
+//       selectedVendorId = null;
+//     });
+
+//     // Fetch total count
 //     const total = await knex('products')
 //       .join('categories', 'products.category_id', '=', 'categories.category_id')
 //       .join('product_to_vendor', 'products.product_id', '=', 'product_to_vendor.product_id')
@@ -60,7 +102,7 @@ async function getVendorCount() {
 //       .where('products.status', 1)
 //       .andWhere('categories.status', 1)
 //       .andWhere('vendors.status', 1)
-//       .count('* as total')
+//       .countDistinct('products.product_id as total')
 //       .first();
 
 //     return { products, total: total.total, page, limit };
@@ -92,18 +134,6 @@ async function getProducts(page = 1, limit = 5) {
       .join('categories', 'products.category_id', '=', 'categories.category_id')
       .where('products.status', 1)
       .andWhere('categories.status', 1)
-      .groupBy(
-        'products.product_id',
-        'products.product_name',
-        'products.status',
-        'categories.category_id',
-        'categories.category_name',
-        'categories.status',
-        'products.quantity_in_stock',
-        'products.unit_price',
-        'products.product_image',
-        'products.unit'
-      )
       .limit(limit)
       .offset(offset);
 
@@ -128,22 +158,19 @@ async function getProducts(page = 1, limit = 5) {
       });
     });
 
-    // Add the vendors array to each product
+    // Add the vendors array and additional fields to each product
     products.forEach((product) => {
       product.vendors = productVendorMap[product.product_id] || [];
-      product.currentQuantity = 0;
-      isSelected = false;
-      selectedVendorId = null;
+      product.currentQuantity = 0; // Default value
+      product.isSelected = false; // Default value
+      product.selectedVendorId = null; // Default value
     });
 
-    // Fetch total count
+    // Fetch total count of products
     const total = await knex('products')
       .join('categories', 'products.category_id', '=', 'categories.category_id')
-      .join('product_to_vendor', 'products.product_id', '=', 'product_to_vendor.product_id')
-      .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id')
       .where('products.status', 1)
       .andWhere('categories.status', 1)
-      .andWhere('vendors.status', 1)
       .countDistinct('products.product_id as total')
       .first();
 
@@ -249,38 +276,72 @@ async function moveToCart(products){
   });
 };
 
-// Service method to get all cart items for a specific user
-async function getCartItems(userId){
+// 
+
+async function getCartItems(userId, page = 1, limit = 5) {
   try {
+    const offset = (page - 1) * limit;
+
+    // Fetch the total count of cart items for the user
+    const totalItemsQuery = knex('carts')
+      .count('* as total')
+      .where('user_id', userId)
+      .first();
+
     // Fetch cart items along with related product, category, and vendor information
-    const cartItems = await knex('carts')
-      .join('products', 'carts.product_id', '=', 'products.product_id')
-      .join('categories', 'products.category_id', '=', 'categories.category_id')
-      .join('product_to_vendor', 'products.product_id', '=', 'product_to_vendor.product_id')
-      .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id')
-      .select(
-        'products.product_id',
-        'products.product_name',
-        'products.product_image',
-        'categories.category_name',
-        'vendors.vendor_name',
-        'carts.quantity',
-        'carts.quantity as initialQuantity',
-        'products.quantity_in_stock'
-      )
-      .where('carts.user_id', userId);
+    const cartItemsQuery = knex('carts')
+  .join('products', 'carts.product_id', '=', 'products.product_id')
+  .join('categories', 'products.category_id', '=', 'categories.category_id')
+  .join('product_to_vendor', function () {
+    this.on('products.product_id', '=', 'product_to_vendor.product_id')
+      .andOn('carts.vendor_id', '=', 'product_to_vendor.vendor_id'); // Ensure cart's vendor matches
+  })
+  .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id') // Tie to correct vendor
+  .select(
+    'products.product_id',
+    'products.product_name',
+    'products.product_image',
+    'categories.category_name',
+    'vendors.vendor_name',
+    'carts.quantity',
+    'carts.quantity as initialQuantity',
+    'products.quantity_in_stock'
+  )
+  .where('carts.user_id', userId)
+  .groupBy(
+    'carts.id', // Group by unique cart ID to prevent duplicate rows
+    'products.product_id',
+    'products.product_name',
+    'products.product_image',
+    'categories.category_name',
+    'vendors.vendor_name',
+    'carts.quantity',
+    'products.quantity_in_stock'
+  )
+  .limit(limit)
+  .offset(offset);
+
+
+    // Execute both queries in parallel
+    const [totalResult, cartItems] = await Promise.all([totalItemsQuery, cartItemsQuery]);
 
     // If no cart items are found for the user, throw an error
-    if (cartItems.length === 0) {
+    if (!totalResult.total || cartItems.length === 0) {
       throw new Error('No cart items found for this user');
     }
 
-    return cartItems;
+    return {
+      total: totalResult.total,
+      page,
+      limit,
+      products: cartItems,
+    };
   } catch (error) {
     console.error('Error fetching cart items in service:', error);
     throw error; // Re-throw the error to be handled by the controller
   }
-};
+}
+
 
 // Service method to update quantity in cart and product stock within a transaction
 async function updateCartItemQuantity(productId, changeInQuantity, userId) {
