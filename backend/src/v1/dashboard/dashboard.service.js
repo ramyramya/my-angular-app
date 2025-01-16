@@ -620,7 +620,7 @@ async function updateProductDetails(data) {
         product_name: productName,
         category_id: categoryId,
         quantity_in_stock: quantity,
-        unit_price: unit,
+        unit: unit,
         status: productStatus,
       });
     } else {

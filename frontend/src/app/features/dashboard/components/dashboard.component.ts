@@ -204,6 +204,8 @@ export class DashboardComponent implements OnInit {
         if (data.success) {
           this.toastr.success('Product added Successfully!', 'Success');
           // Optional: Reset form, close modal, reload product list
+          this.closeModal("addProductModal");
+          this.fetchPage(this.currentPage);
         }
       },
       error: (error) => {
@@ -249,6 +251,7 @@ export class DashboardComponent implements OnInit {
         }
 
         console.log('File uploaded successfully:', this.fileUrl);
+        
       } else {
         console.error('Error retrieving presigned URL');
         throw new Error('Error retrieving presigned URL');
@@ -356,12 +359,13 @@ export class DashboardComponent implements OnInit {
     this.dashboardService.moveToCart(selectedProducts).subscribe(
       (response) => {
         console.log('Products moved to cart:', response);
-        alert('Products moved successfully!');
+        this.closeModal("moveToModal");
+        this.toastr.success('Products moved successfully!', 'Success');
         // Optionally refresh products or update UI
       },
       (error) => {
         console.error('Error moving products to cart:', error);
-        alert('Failed to move products.');
+        this.toastr.error('Failed to move products.', 'Error');
       }
     );
   }
@@ -394,6 +398,7 @@ export class DashboardComponent implements OnInit {
         next: (response) => {
           console.log('Cart items updated successfully:', response);
           this.fetchCartPage(this.currentCartPage); // Optionally re-fetch the cart
+          this.fetchPage(this.currentPage);
           this.quantityChanges = {}; // Clear the changes after a successful update
         },
         error: (error) => {
@@ -414,9 +419,11 @@ export class DashboardComponent implements OnInit {
           next: (response) => {
             // Handle success response (e.g., refresh the product list)
             this.products = this.products.filter(p => p.product_id !== product.product_id);
+            this.toastr.success("Product Deleted", "Success");
           },
           error: (error) => {
             console.error('Error deleting product:', error);
+            this.toastr.error("Error deleting Product", "error");
           }}
         );
     }
@@ -526,10 +533,17 @@ export class DashboardComponent implements OnInit {
 
   deleteCartItem(cartId: number): void {
     console.log("cartId: ",  cartId);
-    this.dashboardService.deleteCartItem(cartId).subscribe(() => {
+    this.dashboardService.deleteCartItem(cartId).subscribe({
+      next: (res) => {
+        this.toastr.success("Product Deleted", "Success");;
       // Refresh the cart after deletion
       this.fetchCartPage(this.currentCartPage);
-    });
+      this.fetchPage(this.currentPage);
+    },
+    error: (err)=>{
+      this.toastr.error("Error Deleting Product ", "Error");
+    }
+  });
   }
 
 
@@ -557,13 +571,29 @@ export class DashboardComponent implements OnInit {
   uploadData(): void {
     if (this.fileData.length > 0) {
       this.dashboardService.updateProductData(this.fileData).subscribe({
-        next: (res) => console.log('Data updated successfully!', res),
-        error: (err) => console.error('Error updating data!', err),
+        next: (res)=>{
+          console.log('Data updated successfully!', res);
+          this.closeModal("importModal");
+          this.toastr.success("Data Uploaded Successfully", "Success");
+        },
+        error: (err)=>{
+          console.error('Error updating data!', err);
+          this.toastr.error("Error Uploading Data", "Error");
+        },
       });
     } else {
       alert('Please upload a valid file!');
     }
   }
+
+  closeModal(modalname: string): void {
+      const modalElement = document.getElementById(modalname);
+      if (modalElement) {
+        const modal = bootstrap.Modal.getInstance(modalElement)!;
+        modal.hide();
+        modal.dispose();
+      }
+    }
 
 }
 
