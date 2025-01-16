@@ -35,52 +35,60 @@
       </div>
     </div>
 
-    <!--
-    <div class="d-flex justify-content-end mb-3">
-      <div class="d-flex">
-        <input class="form-control me-2" type="text" placeholder="Search products..." aria-label="Search"
-          style="height: 38px; width: 250px;">
-        <button class="btn btn-outline-primary" style="height: 38px;">
-          <i class="bi bi-funnel"></i> Filter
-        </button>
-      </div>
-    </div>
-  -->
-
-  <div class="filter-container">
-    <!-- Search Bar -->
+  <div class="filter-container d-flex align-items-center position-relative">
+    <!-- Search Bar (Reduced Size) -->
     <input 
       type="text" 
-      class="form-control" 
+      class="form-control col-2"  
+      style="width: 200px"
       placeholder="Search products..." 
       [(ngModel)]="searchTerm" 
       (input)="applyFilters()" />
   
-    <!-- Filter by Category -->
-    <select class="form-select" [(ngModel)]="selectedCategory" (change)="applyFilters()">
-      <option value="">All Categories</option>
-      <option *ngFor="let category of categories" [value]="category.category_id">
-        {{ category.category_name }}
-      </option>
-    </select>
-  
-    <!-- Filter by Vendor -->
-    <select class="form-select" [(ngModel)]="selectedVendor" (change)="applyFilters()">
-      <option value="">All Vendors</option>
-      <option *ngFor="let vendor of vendors" [value]="vendor.vendor_id">
-        {{ vendor.vendor_name }}
-      </option>
-    </select>
-
-
-    <!-- Filter by Status -->
-  <select class="form-select" [(ngModel)]="selectedStatus" (change)="applyFilters()">
-    <option value="">All Statuses</option>
-    <option value="1">Available</option>
-    <option value="0">Sold Out</option>
-  </select>
+    <!-- Filter Button (Positioned to the Right) -->
+    <button class="btn btn-primary ml-2" (click)="toggleFilterDropdown()">Filter</button>
+    
+    <!-- Filter Dropdown (Vertical List below the Filter Button) -->
+    <div *ngIf="isFilterDropdownVisible" class="filter-dropdown position-absolute bg-light border shadow-sm mt-2 p-3" style="width: 200px">
+      <div class="filter-option">
+        <label>
+          <input 
+            type="checkbox" 
+            [(ngModel)]="filterByProductName" 
+            (change)="applyFilters()" />
+          Product Name
+        </label>
+      </div>
+      <div class="filter-option">
+        <label>
+          <input 
+            type="checkbox" 
+            [(ngModel)]="filterByStatus" 
+            (change)="applyFilters()" />
+          Status
+        </label>
+      </div>
+      <div class="filter-option">
+        <label>
+          <input 
+            type="checkbox" 
+            [(ngModel)]="filterByCategory" 
+            (change)="applyFilters()" />
+          Category
+        </label>
+      </div>
+      <div class="filter-option">
+        <label>
+          <input 
+            type="checkbox" 
+            [(ngModel)]="filterByVendor" 
+            (change)="applyFilters()" />
+          Vendor
+        </label>
+      </div>
+    </div>
   </div>
-
+  
     <!-- View and Cart Buttons -->
     <div class="d-flex mb-3">
       <button class="btn" [ngClass]="{'btn-primary': !showCart, 'btn-outline-secondary': showCart}"
