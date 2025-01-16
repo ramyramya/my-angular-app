@@ -391,6 +391,7 @@ export class DashboardComponent implements OnInit {
         this.closeModal("moveToModal");
         this.toastr.success('Products moved successfully!', 'Success');
         // Optionally refresh products or update UI
+        this.fetchPage(this.currentPage);
       },
       (error) => {
         console.error('Error moving products to cart:', error);
