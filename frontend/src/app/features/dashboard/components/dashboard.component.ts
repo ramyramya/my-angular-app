@@ -47,6 +47,19 @@ export class DashboardComponent implements OnInit {
 
   fileData: any[] = [];
 
+  searchTerm: string = ''; // Search term
+  selectedCategory: string = ''; // Selected category for filtering
+  selectedVendor: string = ''; // Selected vendor for filtering
+  selectedStatus: string = '';
+  filteredProducts: Product[] = []; // Filtered products list
+
+// Flags for the filter options
+isFilterDropdownVisible = false;
+filterByProductName = false;
+filterByStatus = false;
+filterByCategory = false;
+filterByVendor = false;
+
   constructor(
     private dashboardService: DashboardService, private toastr: ToastrService,
     private fb: FormBuilder // Form builder service for reactive forms
@@ -102,25 +115,46 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  // fetchPage(page: number): void {
+  //   if (page < 1 || (this.totalPages && page > this.totalPages)) return;
+
+  //   this.dashboardService.getProducts(page, this.pageSize).subscribe({
+  //     next: (data) => {
+  //       console.log(data);
+  //       this.products = data.products;
+  //       this.totalItems = data.total;
+  //       this.currentPage = data.page;
+  //       this.totalPages = Math.ceil(this.totalItems / this.pageSize);
+  //       this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  //       console.log(this.pages);
+  //     },
+  //     error: (error) => {
+  //       console.error('Error fetching products:', error);
+  //     },
+  //   });
+
+
+  // }
+
   fetchPage(page: number): void {
     if (page < 1 || (this.totalPages && page > this.totalPages)) return;
 
     this.dashboardService.getProducts(page, this.pageSize).subscribe({
       next: (data) => {
-        console.log(data);
+        console.log("Products Fetched: ", data.products);
         this.products = data.products;
         this.totalItems = data.total;
         this.currentPage = data.page;
         this.totalPages = Math.ceil(this.totalItems / this.pageSize);
         this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
-        console.log(this.pages);
+
+        // Initialize filtered products
+        this.applyFilters();
       },
       error: (error) => {
         console.error('Error fetching products:', error);
       },
     });
-
-
   }
 
   fetchCartPage(page: number): void {
@@ -251,7 +285,7 @@ export class DashboardComponent implements OnInit {
         }
 
         console.log('File uploaded successfully:', this.fileUrl);
-        
+
       } else {
         console.error('Error retrieving presigned URL');
         throw new Error('Error retrieving presigned URL');
@@ -372,17 +406,17 @@ export class DashboardComponent implements OnInit {
 
   updateQuantity(product: any, change: number): void {
     const newQuantity = product.quantity + change;
-  
+
     // Only allow non-negative quantities
     if (newQuantity >= 0) {
       product.quantity = newQuantity; // Update the displayed quantity
-  
+
       // Calculate the change in quantity from the initial state
       const initialQuantity = product.initialQuantity || product.quantity; // Fallback if initialQuantity is not defined
       this.quantityChanges[product.product_id] = newQuantity - initialQuantity;
     }
   }
-  
+
   applyQuantityChanges(): void {
     // Prepare the payload for the backend with the changes
     const updatedProducts = Object.keys(this.quantityChanges)
@@ -391,7 +425,7 @@ export class DashboardComponent implements OnInit {
         productId: +product_id,
         changeInQuantity: this.quantityChanges[+product_id],
       }));
-  
+
     // Call the backend to update the quantities in batch
     if (updatedProducts.length > 0) {
       this.dashboardService.updateCartItemQuantity(updatedProducts).subscribe({
@@ -408,7 +442,7 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  clearSelectedProducts(){
+  clearSelectedProducts() {
     this.selectedProducts = [];
   }
 
@@ -424,13 +458,14 @@ export class DashboardComponent implements OnInit {
           error: (error) => {
             console.error('Error deleting product:', error);
             this.toastr.error("Error deleting Product", "error");
-          }}
+          }
+        }
         );
     }
   }
 
   openEditProduct(product: Product): void {
-    this.selectedProductForEdit = { ...product}; // Create a copy to avoid mutating the original
+    this.selectedProductForEdit = { ...product }; // Create a copy to avoid mutating the original
     this.selectedProductForEdit.selectedVendorIds = [];;
     console.log("Initial product: ", product);
   }
@@ -532,18 +567,18 @@ export class DashboardComponent implements OnInit {
   }
 
   deleteCartItem(cartId: number): void {
-    console.log("cartId: ",  cartId);
+    console.log("cartId: ", cartId);
     this.dashboardService.deleteCartItem(cartId).subscribe({
       next: (res) => {
         this.toastr.success("Product Deleted", "Success");;
-      // Refresh the cart after deletion
-      this.fetchCartPage(this.currentCartPage);
-      this.fetchPage(this.currentPage);
-    },
-    error: (err)=>{
-      this.toastr.error("Error Deleting Product ", "Error");
-    }
-  });
+        // Refresh the cart after deletion
+        this.fetchCartPage(this.currentCartPage);
+        this.fetchPage(this.currentPage);
+      },
+      error: (err) => {
+        this.toastr.error("Error Deleting Product ", "Error");
+      }
+    });
   }
 
 
@@ -571,12 +606,12 @@ export class DashboardComponent implements OnInit {
   uploadData(): void {
     if (this.fileData.length > 0) {
       this.dashboardService.updateProductData(this.fileData).subscribe({
-        next: (res)=>{
+        next: (res) => {
           console.log('Data updated successfully!', res);
           this.closeModal("importModal");
           this.toastr.success("Data Uploaded Successfully", "Success");
         },
-        error: (err)=>{
+        error: (err) => {
           console.error('Error updating data!', err);
           this.toastr.error("Error Uploading Data", "Error");
         },
@@ -587,13 +622,45 @@ export class DashboardComponent implements OnInit {
   }
 
   closeModal(modalname: string): void {
-      const modalElement = document.getElementById(modalname);
-      if (modalElement) {
-        const modal = bootstrap.Modal.getInstance(modalElement)!;
-        modal.hide();
-        modal.dispose();
-      }
+    const modalElement = document.getElementById(modalname);
+    if (modalElement) {
+      const modal = bootstrap.Modal.getInstance(modalElement)!;
+      modal.hide();
+      modal.dispose();
     }
+  }
 
+  applyFilters(): void {
+    this.filteredProducts = this.products.filter(product => {
+      // Search by product name
+      const matchesSearch = product.product_name.toLowerCase().includes(this.searchTerm.toLowerCase());
+
+      // Filter by category
+      const matchesCategory = this.selectedCategory
+        ? product.category_id === +this.selectedCategory
+        : true;
+
+      // Filter by vendor
+      const matchesVendor = this.selectedVendor
+        ? product.vendors.some(vendor => vendor.vendor_id === +this.selectedVendor)
+        : true;
+      const flag = 1;
+      if(product.quantity_in_stock > 0){
+        this.flag = 1
+      }
+      else{
+        this.flag = 0;
+      }
+      // Filter by status
+      const matchesStatus = this.selectedStatus
+        ? this.flag === +this.selectedStatus
+        : true;
+
+      return matchesSearch && matchesCategory && matchesVendor && matchesStatus;
+    });
+  }
+
+
+  
 }
 

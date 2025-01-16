@@ -35,7 +35,7 @@
       </div>
     </div>
 
-    <!-- Search Bar & Filter Button aligned to the right -->
+    <!--
     <div class="d-flex justify-content-end mb-3">
       <div class="d-flex">
         <input class="form-control me-2" type="text" placeholder="Search products..." aria-label="Search"
@@ -45,6 +45,41 @@
         </button>
       </div>
     </div>
+  -->
+
+  <div class="filter-container">
+    <!-- Search Bar -->
+    <input 
+      type="text" 
+      class="form-control" 
+      placeholder="Search products..." 
+      [(ngModel)]="searchTerm" 
+      (input)="applyFilters()" />
+  
+    <!-- Filter by Category -->
+    <select class="form-select" [(ngModel)]="selectedCategory" (change)="applyFilters()">
+      <option value="">All Categories</option>
+      <option *ngFor="let category of categories" [value]="category.category_id">
+        {{ category.category_name }}
+      </option>
+    </select>
+  
+    <!-- Filter by Vendor -->
+    <select class="form-select" [(ngModel)]="selectedVendor" (change)="applyFilters()">
+      <option value="">All Vendors</option>
+      <option *ngFor="let vendor of vendors" [value]="vendor.vendor_id">
+        {{ vendor.vendor_name }}
+      </option>
+    </select>
+
+
+    <!-- Filter by Status -->
+  <select class="form-select" [(ngModel)]="selectedStatus" (change)="applyFilters()">
+    <option value="">All Statuses</option>
+    <option value="1">Available</option>
+    <option value="0">Sold Out</option>
+  </select>
+  </div>
 
     <!-- View and Cart Buttons -->
     <div class="d-flex mb-3">
@@ -57,7 +92,7 @@
     </div>
 
     <!-- Inventory Table -->
-    <div *ngIf="!showCart">
+    <div *ngIf="!showCart"  class="table-responsive">
       <table class="table table-striped table-bordered table-hover mb-0">
         <thead class="table-light">
           <tr>
@@ -72,7 +107,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let product of products">
+          <tr *ngFor="let product of filteredProducts">
             <td><input type="checkbox" class="form-check-input" (change)="onCheckboxChange($event, product)"></td>
             <td>
               <div *ngIf="!selectedProductForEdit || product.product_id !== selectedProductForEdit.product_id">
@@ -185,7 +220,7 @@
 
 
     <!-- Cart Table (visible when Cart is clicked) -->
-    <div *ngIf="showCart">
+    <div *ngIf="showCart"  class="table-responsive">
       <table class="table table-striped table-bordered table-hover mb-0">
         <thead class="table-light">
           <tr>
@@ -338,7 +373,7 @@
           <h5 class="modal-title" id="moveToModalLabel">Move Products</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body"  class="table-responsive">
           <!-- Table with Inventory Data for "Move To" -->
           <table class="table table-striped table-bordered table-hover mb-0">
             <thead class="table-light">

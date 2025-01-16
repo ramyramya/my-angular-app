@@ -516,7 +516,7 @@ async function updateProductAndVendors(product_id, productData) {
         product_name,
         quantity_in_stock,
         unit,
-        category_id
+        category_id,
       });
 
     // Check if selectedVendorIds is not empty before modifying the product_to_vendor table

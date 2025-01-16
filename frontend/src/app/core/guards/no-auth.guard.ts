@@ -5,20 +5,20 @@ import jwt_decode from 'jwt-decode';
 @Injectable({
   providedIn: 'root'
 })
-export class AuthGuard implements CanActivate {
+export class NoAuthGuard implements CanActivate {
   constructor(private router: Router) {}
 
   canActivate(): boolean {
     const token = sessionStorage.getItem('access_token');
 
     if (token && !this.isTokenExpired(token)) {
-      // Token is valid, allow access
-      return true;
+      // Token is valid, redirect to dashboard
+      this.router.navigate(['/dashboard']);
+      return false;  // Prevent access to the current route
     }
 
-    // Token is missing or expired, redirect to login
-    this.router.navigate(['/auth/login']);
-    return false;
+    // Token is missing or expired, allow access
+    return true;  // Allow access to the current route (e.g., login/signup)
   }
 
   private isTokenExpired(token: string): boolean {
@@ -27,7 +27,7 @@ export class AuthGuard implements CanActivate {
       const expirationDate = decodedToken.exp * 1000;  // Convert exp to milliseconds
       return expirationDate < Date.now();  // Check if token is expired
     } catch (e) {
-      return true; // Return true if decoding fails (invalid token)
+      return true; // Return true if decoding fails (invalid or malformed token)
     }
   }
 }
