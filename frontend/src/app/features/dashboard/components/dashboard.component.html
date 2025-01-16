@@ -147,8 +147,12 @@
             </td>
             <td>
               <div *ngIf="!selectedProductForEdit || product.product_id !== selectedProductForEdit.product_id">
-                <ul>
-                  <li *ngFor="let vendor of product.vendors">{{ vendor.vendor_name }}</li>
+                <ul class="list-unstyled">
+                  <li *ngFor="let vendor of product.vendors; let i = index">
+                    <span class="badge rounded-pill" [ngClass]="getBadgeClass(i)">
+                      {{ vendor.vendor_name }}
+                    </span>
+                  </li>
                 </ul>
               </div>
               <div *ngIf="selectedProductForEdit && product.product_id === selectedProductForEdit.product_id">

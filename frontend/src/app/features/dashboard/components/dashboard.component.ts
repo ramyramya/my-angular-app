@@ -14,6 +14,13 @@ import * as XLSX from 'xlsx';
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
+
+  // Define the transparent colors for badges (violet, pink, yellow)
+  badgeColors = [
+    'bg-transparent-purple',  // Transparent Violet
+    'bg-transparent-pink',    // Transparent Pink
+    'bg-transparent-yellow'   // Transparent Yellow
+  ];
   showCart: boolean = false;  // Flag to control which table is shown
   products: Product[] = [];
   vendorCount: number = 0;
@@ -392,6 +399,7 @@ export class DashboardComponent implements OnInit {
         this.toastr.success('Products moved successfully!', 'Success');
         // Optionally refresh products or update UI
         this.fetchPage(this.currentPage);
+        this.fetchCartPage(this.currentCartPage);
       },
       (error) => {
         console.error('Error moving products to cart:', error);
@@ -450,6 +458,8 @@ export class DashboardComponent implements OnInit {
             // Handle success response (e.g., refresh the product list)
             this.products = this.products.filter(p => p.product_id !== product.product_id);
             this.toastr.success("Product Deleted", "Success");
+
+            this.fetchPage(this.currentPage);
           },
           error: (error) => {
             console.error('Error deleting product:', error);
@@ -662,6 +672,11 @@ export class DashboardComponent implements OnInit {
 
       return matchesSelectedFilters;
     });
+  }
+
+  // Function to get a color class based on index
+  getBadgeClass(index: number): string {
+    return this.badgeColors[index % this.badgeColors.length]; // Ensures colors repeat
   }
 }
 

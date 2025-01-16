@@ -77,3 +77,17 @@
 
 
 
+/* Custom Transparent Colors */
+.bg-transparent-purple {
+  background-color: rgba(111, 66, 193, 0.7); /* Violet with 30% opacity */
+}
+
+.bg-transparent-pink {
+  background-color: rgba(232, 62, 140, 0.7); /* Pink with 30% opacity */
+}
+
+.bg-transparent-yellow {
+  background-color: rgba(255, 193, 7, 0.7); /* Yellow with 30% opacity */
+}
+
+
