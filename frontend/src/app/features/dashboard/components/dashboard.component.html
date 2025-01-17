@@ -1,7 +1,12 @@
 <app-navbar></app-navbar>
 
-<div class="container mt-4">
+
+
+
+<div class="container-fluid  mt-4">
+  <div class="row">
   <!-- Entire Inventory Section with White Background as One Box -->
+  <div class="col-md-10">
   <div class="bg-white p-4 rounded shadow-sm">
 
     <!-- Inventory Header Section -->
@@ -290,6 +295,31 @@
 
 
   </div> <!-- End of bg-white p-4 rounded -->
+  
+  </div>
+
+
+  <!-- Upload and Download Files Section Container -->
+  <div class="col-md-2">
+    <div class="bg-white p-4 rounded shadow-sm">
+      <!-- Upload and Download Section Content -->
+      <h4 class="mb-3">File Management</h4>
+      
+      <!-- Upload Button -->
+      <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#importModal">
+        <i class="bi bi-upload"></i> Import Products
+      </button>
+      
+      <!-- Download All Button -->
+      <button class="btn btn-outline-primary mb-3" (click)="downloadAllSelected()">
+        <i class="bi bi-download"></i> Download All
+      </button>
+
+      <!-- You can add any additional functionality for file upload or other operations here -->
+    </div>
+  </div>
+  </div>
+</div>
 
   <!-- Add Product Modal -->
   <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
@@ -465,4 +495,4 @@
   </div>
 </div>
 
-</div>
+

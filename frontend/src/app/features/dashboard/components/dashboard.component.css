@@ -1,33 +1,26 @@
-/* Add your custom styles for the dashboard here */
-.container {
-    margin-top: 2rem;
-  }
+:host{
+  background-color: #DADCFA;
+}
 
-  :host {
-    display: block;
-    background-color: #DADCFA; /* Set the background color */
-    min-height: 100vh; /* Ensure it covers the full viewport height */
-    margin: 0; /* Remove any default margins */
-    padding: 0; /* Remove any default padding */
-  }
-  
+/* Optional: Adjust margins and paddings if needed to fix overflow */
+.table-responsive {
+  margin-bottom: 1rem;
+}
 
-
-  /* Remove border and background for action buttons */
+/* Action buttons styling */
 .table .btn {
   border: none;
   background: transparent;
-  padding: 0.375rem 0.75rem;  /* Adjust padding if needed */
+  padding: 0.375rem 0.75rem; /* Adjust padding if needed */
   font-size: 1.125rem; /* Icon size */
   color: #000; /* Icon color */
 }
 
-/* Optional: Add hover effect to make the icon more interactive */
 .table .btn:hover {
-  color: #007bff;  /* Change color on hover */
+  color: #007bff; /* Change color on hover */
 }
 
-/* Custom styling for the pagination */
+/* Pagination */
 .pagination .page-item .page-link {
   font-size: 16px;
   font-weight: bold;
@@ -54,10 +47,10 @@
   font-family: 'Arial', sans-serif;
 }
 
-
+/* Filter Container */
 .filter-container {
   display: flex;
-  justify-content: flex-end; 
+  justify-content: flex-end;
   position: relative;
 }
 
@@ -75,8 +68,6 @@
   margin-bottom: 8px; /* Add spacing between filter options */
 }
 
-
-
 /* Custom Transparent Colors */
 .bg-transparent-purple {
   background-color: rgba(111, 66, 193, 0.7); /* Violet with 30% opacity */
@@ -89,5 +80,3 @@
 .bg-transparent-yellow {
   background-color: rgba(255, 193, 7, 0.7); /* Yellow with 30% opacity */
 }
-
-
