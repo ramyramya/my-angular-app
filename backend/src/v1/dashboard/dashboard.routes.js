@@ -33,7 +33,8 @@ router.put('/delete_product/:productId', authMiddleware, dashboardController.del
 router.put('/products/:product_id', authMiddleware, dashboardController.updateProductAndVendors);
 router.delete('/delete-cart-item/:cartId', authMiddleware, dashboardController.deleteCartItem);
 router.post('/update-products', authMiddleware, dashboardController.updateProducts);
-
+router.post('/get-presigned-url-for-file', authMiddleware, dashboardController.getPresignedUrlForFile);
+router.get('/get-user-files', authMiddleware, dashboardController.getUserFiles);
 
 module.exports = router;
 

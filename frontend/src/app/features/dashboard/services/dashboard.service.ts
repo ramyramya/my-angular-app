@@ -116,6 +116,15 @@ doc.text(`Status: ${product.product_status === 1 ? 'Available' : 'Sold Out'}`, 1
   updateProductData(data: any[]): Observable<any> {
     return this.http.post(`${this.apiUrl}/update-products`, { data });
   }
+
+  getPresignedUrlForFile(fileName: string, fileType: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/get-presigned-url-for-file`, { fileName, fileType });
+  }
+
+  // Service Method to Fetch User Files
+getUserFiles(): Observable<{ files: { key: string; url: string }[] }> {
+  return this.http.get<{ files: { key: string; url: string }[] }>(`${this.apiUrl}/get-user-files`);
+}
   
 }
 

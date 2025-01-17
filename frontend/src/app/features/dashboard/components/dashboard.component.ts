@@ -6,6 +6,8 @@ import * as bootstrap from 'bootstrap'
 import imageCompression from 'browser-image-compression';
 import { ToastrService } from 'ngx-toastr';
 import * as XLSX from 'xlsx';
+import * as JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 
 @Component({
@@ -61,6 +63,10 @@ export class DashboardComponent implements OnInit {
   filterByStatus = false;
   filterByCategory = false;
   filterByVendor = false;
+  selectedFileForUpload: File | null = null;
+
+  files: { key: string; url: string }[] = [];
+  selectedFiles: Set<string> = new Set();
 
   constructor(
     private dashboardService: DashboardService, private toastr: ToastrService,
@@ -86,6 +92,7 @@ export class DashboardComponent implements OnInit {
     this.loadCategories();
     this.loadVendors();
     this.fetchCartPage(this.currentCartPage);
+    this.getUserFiles();
   }
 
   ngDoCheck(): void {
@@ -224,7 +231,7 @@ export class DashboardComponent implements OnInit {
       // Proceed with product submission
       const productData = {
         ...this.addProductForm.value,
-        productImage: this.fileUrl || '' // Use the uploaded file URL or a default value
+        productImage: this.fileUrl || '' 
       };
 
       this.submitProduct(productData);
@@ -276,7 +283,7 @@ export class DashboardComponent implements OnInit {
         const uploadResponse = await fetch(presignedUrl, {
           method: 'PUT',
           headers: {
-            'Content-Type': fileType, // Use the file's MIME type
+            'Content-Type': fileType, 
           },
           body: compressedFile,
         });
@@ -677,6 +684,107 @@ export class DashboardComponent implements OnInit {
   // Function to get a color class based on index
   getBadgeClass(index: number): string {
     return this.badgeColors[index % this.badgeColors.length]; // Ensures colors repeat
+  }
+
+  onFileUploadSelect(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedFileForUpload = input.files[0];
+    }
+  }
+
+  // Upload the file
+  uploadFile(): void {
+    if (!this.selectedFileForUpload) {
+      alert('No file selected!');
+      return;
+    }
+
+    const file = this.selectedFileForUpload;
+    const fileName = file.name;
+    const fileType = file.type;
+
+    // Step 1: Request the presigned URL
+    this.dashboardService.getPresignedUrlForFile(fileName, fileType).subscribe({
+      next: (response) => {
+        const { presignedUrl, fileUrl } = response;
+        console.log("FilePath: ",  fileUrl);
+
+        // Step 2: Upload the file to S3 using the presigned URL
+        fetch(presignedUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': fileType },
+          body: file,
+        })
+          .then(() => {
+            alert('File uploaded successfully!');
+          })
+          .catch((err) => {
+            console.error('Error uploading file:', err);
+            alert('Failed to upload file.');
+          });
+      },
+      error: (err) => {
+        console.error('Error getting presigned URL:', err);
+        alert('Failed to get presigned URL.');
+      },
+    });
+  }
+  getUserFiles(){
+    // Fetch user files on component initialization
+    this.dashboardService.getUserFiles().subscribe({
+      next: (response) => {
+        this.files = response.files;
+        console.log("Files: ", this.files);
+      },
+      error: (err) => {
+        console.error('Error fetching files:', err);
+      },
+    });
+  }
+  
+  toggleFileSelection(fileKey: string): void {
+    if (this.selectedFiles.has(fileKey)) {
+      this.selectedFiles.delete(fileKey);
+    } else {
+      this.selectedFiles.add(fileKey);
+    }
+  }
+
+  async downloadSelectedFiles(): Promise<void> {
+    if (this.selectedFiles.size === 0) {
+      alert('Please select at least one file to download.');
+      return;
+    }
+
+    if (this.selectedFiles.size === 1) {
+      // Single file download
+      const fileKey = Array.from(this.selectedFiles)[0];
+      const file = this.files.find((f) => f.key === fileKey);
+      if (file) {
+        const response = await fetch(file.url);
+        const blob = await response.blob();
+        saveAs(blob, fileKey.split('/').pop() || 'downloaded-file');
+      }
+    } else {
+      // Multiple files - Create a ZIP archive
+      const zip = new JSZip();
+      const downloadPromises = Array.from(this.selectedFiles).map(async (fileKey) => {
+        const file = this.files.find((f) => f.key === fileKey);
+        if (file) {
+          const response = await fetch(file.url);
+          const blob = await response.blob();
+          zip.file(fileKey.split('/').pop() || 'file', blob);
+        }
+      });
+
+      await Promise.all(downloadPromises);
+
+      // Generate and save the ZIP file
+      zip.generateAsync({ type: 'blob' }).then((content) => {
+        saveAs(content, 'selected_files.zip');
+      });
+    }
   }
 }
 

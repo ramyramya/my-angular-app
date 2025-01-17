@@ -421,6 +421,74 @@ async function updateProducts(req, res) {
 
 }
 
+// Endpoint to get the presigned URL for uploading a file
+async function getPresignedUrlForFile(req, res) {
+  try {
+    const { payload } = req.body;
+
+    // Decrypt the incoming payload
+    const secretKey = process.env.SECRET_KEY;
+    const decryptedData = CryptoJS.AES.decrypt(payload, secretKey).toString(CryptoJS.enc.Utf8);
+    console.log(decryptedData);
+    const { fileName, fileType } = JSON.parse(decryptedData);
+    const { userName, userId } = req.user;
+    
+
+    const filePath = `${userName}_${userId}/${fileName}`;
+    // Ensure the required fields are present
+    if (!fileName || !fileType) {
+      return res.status(400).json({ success: false, message: 'Missing fileName or fileType' });
+    }
+
+    const s3Params = {
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: filePath,
+      Expires: 60 * 50, // URL expiration time in seconds
+      ContentType: fileType,
+      //ACL: 'public-read' // Make the file publicly accessible
+    };
+
+    const presignedUrl = await s3.getSignedUrlPromise('putObject', s3Params);
+    
+
+    res.json({
+      success: true,
+      presignedUrl,
+      fileUrl: `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${filePath}`
+    });
+  } catch (error) {
+    console.error('Error generating presigned URL:', error);
+    res.status(500).json({ success: false, message: 'Error generating presigned URL' });
+  }
+}
+
+
+
+async function getUserFiles(req, res){
+  const { userName, userId } = req.user;
+  const prefix = `${userName}_${userId}/`; // Folder structure in S3
+
+  const params = {
+    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    Prefix: prefix,
+  };
+
+  s3.listObjectsV2(params, (err, data) => {
+    if (err) {
+      console.error('Error retrieving files:', err);
+      return res.status(500).json({ error: 'Error retrieving files from S3' });
+    }
+
+    const files = data.Contents.map((file) => ({
+      key: file.Key,
+      url: `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${file.Key}`,
+    }));
+
+    res.json({ files });
+  });
+}
+
+
 module.exports = {
   getUserInfo,
   getPresignedUrl,
@@ -436,7 +504,9 @@ module.exports = {
   deleteProductAndVendors,
   updateProductAndVendors,
   deleteCartItem,
-  updateProducts
+  updateProducts,
+  getPresignedUrlForFile,
+  getUserFiles
 };
 
 
