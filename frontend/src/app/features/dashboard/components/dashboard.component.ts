@@ -718,6 +718,7 @@ export class DashboardComponent implements OnInit {
         })
           .then(() => {
             alert('File uploaded successfully!');
+            this.getUserFiles();
           })
           .catch((err) => {
             console.error('Error uploading file:', err);
