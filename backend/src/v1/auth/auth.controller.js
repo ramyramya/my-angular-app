@@ -119,8 +119,10 @@ async function refresh(req, res){
     
     // Find the user (ensure the refresh token matches the user)
     const user = await knex('users')
-                  .where('id', decoded.userId);
+                  .where('id', decoded.userId)
+                  .first();
     console.log("User found in refresh token process");
+    //console.log("User: ", user);
     if (!user) {
       return res.status(401).json({ message: 'User not found' });
     }
@@ -131,9 +133,11 @@ async function refresh(req, res){
 
     res.json({ accessToken: newAccessToken, refreshToken: refreshToken });
   } catch (error) {
-    console.log(error);
-    return res.status(401).json({ message: 'Invalid or expired refresh token' });
-  }
+    if (error.name === 'TokenExpiredError') {
+        return res.status(401).json({ error: 'Refresh token expired' });
+    }
+    return res.status(401).json({ error: 'Invalid refresh token' });
+}
 };
 
 module.exports = { signup, login, refresh };
