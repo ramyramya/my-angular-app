@@ -113,12 +113,80 @@ async function getVendorCount() {
 // }
 
 
-async function getProducts(page = 1, limit = 5) {
+// async function getProducts(page = 1, limit = 5) {
+//   try {
+//     const offset = (page - 1) * limit;
+
+//     // Fetch the main product data
+//     const products = await knex('products')
+//       .select(
+//         'products.product_id',
+//         'products.product_name',
+//         'products.status AS product_status',
+//         'categories.category_id',
+//         'categories.category_name',
+//         'categories.status AS category_status',
+//         'products.quantity_in_stock',
+//         'products.unit_price',
+//         'products.product_image',
+//         'products.unit'
+//       )
+//       .join('categories', 'products.category_id', '=', 'categories.category_id')
+//       .where('products.status', 1)
+//       .andWhere('categories.status', 1)
+//       .limit(limit)
+//       .offset(offset);
+
+//     // Fetch vendors for each product
+//     const productIds = products.map((product) => product.product_id);
+
+//     const vendors = await knex('product_to_vendor')
+//       .select('product_to_vendor.product_id', 'vendors.vendor_id', 'vendors.vendor_name')
+//       .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id')
+//       .whereIn('product_to_vendor.product_id', productIds)
+//       .andWhere('vendors.status', 1);
+
+//     // Map vendors to their respective products
+//     const productVendorMap = {};
+//     vendors.forEach((vendor) => {
+//       if (!productVendorMap[vendor.product_id]) {
+//         productVendorMap[vendor.product_id] = [];
+//       }
+//       productVendorMap[vendor.product_id].push({
+//         vendor_id: vendor.vendor_id,
+//         vendor_name: vendor.vendor_name,
+//       });
+//     });
+
+//     // Add the vendors array and additional fields to each product
+//     products.forEach((product) => {
+//       product.vendors = productVendorMap[product.product_id] || [];
+//       product.currentQuantity = 0; // Default value
+//       product.isSelected = false; // Default value
+//       product.selectedVendorId = null; // Default value
+//     });
+
+//     // Fetch total count of products
+//     const total = await knex('products')
+//       .join('categories', 'products.category_id', '=', 'categories.category_id')
+//       .where('products.status', 1)
+//       .andWhere('categories.status', 1)
+//       .countDistinct('products.product_id as total')
+//       .first();
+
+//     return { products, total: total.total, page, limit };
+//   } catch (error) {
+//     console.error('Error fetching products:', error);
+//     throw error;
+//   }
+// }
+
+async function getProducts(page = 1, limit = 5, filters = {}) {
   try {
     const offset = (page - 1) * limit;
 
-    // Fetch the main product data
-    const products = await knex('products')
+    // Initialize the base query for products
+    const productQuery = knex('products')
       .select(
         'products.product_id',
         'products.product_name',
@@ -133,13 +201,41 @@ async function getProducts(page = 1, limit = 5) {
       )
       .join('categories', 'products.category_id', '=', 'categories.category_id')
       .where('products.status', 1)
-      .andWhere('categories.status', 1)
-      .limit(limit)
-      .offset(offset);
+      .andWhere('categories.status', 1);
 
-    // Fetch vendors for each product
+    // Apply filters dynamically
+    if (filters.productName) {
+      productQuery.andWhereRaw('LOWER(products.product_name) LIKE ?', [`%${filters.productName.toLowerCase()}%`]);
+    }
+    if (filters.status) {
+      if (filters.status.toLowerCase() === 'available') {
+        productQuery.andWhere('products.quantity_in_stock', '>', 0);
+      } else if (filters.status.toLowerCase() === 'sold out') {
+        productQuery.andWhere('products.quantity_in_stock', '<=', 0);
+      }
+    }    
+    if (filters.category) {
+      productQuery.andWhereRaw('LOWER(categories.category_name) LIKE ?', [`%${filters.category.toLowerCase()}%`]);
+    }
+    if (filters.vendor) {
+      productQuery.whereIn(
+        'products.product_id',
+        knex('product_to_vendor')
+          .select('product_id')
+          .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id')
+          .whereRaw('LOWER(vendors.vendor_name) LIKE ?', [`%${filters.vendor.toLowerCase()}%`])
+          .andWhere('vendors.status', 1)
+      );
+    }
+
+    // Add pagination
+    productQuery.limit(limit).offset(offset);
+
+    // Execute the query to fetch products
+    const products = await productQuery;
+
+    // Fetch vendors for the selected products
     const productIds = products.map((product) => product.product_id);
-
     const vendors = await knex('product_to_vendor')
       .select('product_to_vendor.product_id', 'vendors.vendor_id', 'vendors.vendor_name')
       .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id')
@@ -158,7 +254,7 @@ async function getProducts(page = 1, limit = 5) {
       });
     });
 
-    // Add the vendors array and additional fields to each product
+    // Enhance products with vendors and default fields
     products.forEach((product) => {
       product.vendors = productVendorMap[product.product_id] || [];
       product.currentQuantity = 0; // Default value
@@ -166,13 +262,38 @@ async function getProducts(page = 1, limit = 5) {
       product.selectedVendorId = null; // Default value
     });
 
-    // Fetch total count of products
-    const total = await knex('products')
+    // Fetch the total count of matching products
+    const totalQuery = knex('products')
       .join('categories', 'products.category_id', '=', 'categories.category_id')
       .where('products.status', 1)
-      .andWhere('categories.status', 1)
-      .countDistinct('products.product_id as total')
-      .first();
+      .andWhere('categories.status', 1);
+
+    // Apply the same filters to the total count query
+    if (filters.productName) {
+      totalQuery.andWhereRaw('LOWER(products.product_name) LIKE ?', [`%${filters.productName.toLowerCase()}%`]);
+    }
+    if (filters.status) {
+      if (filters.status.toLowerCase() === 'available') {
+        productQuery.andWhere('products.quantity_in_stock', '>', 0);
+      } else if (filters.status.toLowerCase() === 'sold out') {
+        productQuery.andWhere('products.quantity_in_stock', '<=', 0);
+      }
+    }    
+    if (filters.category) {
+      totalQuery.andWhereRaw('LOWER(categories.category_name) LIKE ?', [`%${filters.category.toLowerCase()}%`]);
+    }
+    if (filters.vendor) {
+      totalQuery.whereIn(
+        'products.product_id',
+        knex('product_to_vendor')
+          .select('product_id')
+          .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id')
+          .whereRaw('LOWER(vendors.vendor_name) LIKE ?', [`%${filters.vendor.toLowerCase()}%`])
+          .andWhere('vendors.status', 1)
+      );
+    }
+
+    const total = await totalQuery.countDistinct('products.product_id as total').first();
 
     return { products, total: total.total, page, limit };
   } catch (error) {
@@ -180,6 +301,10 @@ async function getProducts(page = 1, limit = 5) {
     throw error;
   }
 }
+
+
+
+
 
 // Fetch all categories
 async function getCategories() {
@@ -587,80 +712,6 @@ async function deleteCartItem(cartId) {
   }
 }
 
-
-// async function updateProductDetails(data) {
-//   for (const row of data) {
-//     const { 
-//       Category: categoryName, 
-//       'Product Name': productName, 
-//       Quantity: quantity, 
-//       Status: status, 
-//       Unit: unit, 
-//       Vendors: vendors 
-//     } = row;
-
-//     // Map status to a numeric value
-//     const productStatus = status === "Available" ? 1 : 99;
-
-//     // Find or create category
-//     let categoryId;
-//     const [existingCategory] = await knex('categories').where({ category_name: categoryName });
-//     if (!existingCategory) {
-//       [categoryId] = await knex('categories').insert({ category_name: categoryName, status: 1 });
-//     } else {
-//       categoryId = existingCategory.category_id;
-//     }
-
-//     // Find or create product
-//     let productId;
-//     const [existingProduct] = await knex('products')
-//       .where({ product_name: productName, category_id: categoryId });
-//     if (!existingProduct) {
-//       [productId] = await knex('products').insert({
-//         product_name: productName,
-//         category_id: categoryId,
-//         quantity_in_stock: quantity,
-//         unit: unit,
-//         status: productStatus,
-//       });
-//     } else {
-//       productId = existingProduct.product_id;
-//       await knex('products')
-//         .where({ product_id: productId })
-//         .update({
-//           quantity_in_stock: quantity,
-//           unit_price: unit,
-//           status: productStatus,
-//         });
-//     }
-//     console.log("Product Id: ", productId);
-
-//     // Process vendors
-//     const vendorNames = vendors.split(',').map((v) => v.trim());
-//     for (const vendorName of vendorNames) {
-//       let vendorId;
-//       const [existingVendor] = await knex('vendors').where({ vendor_name: vendorName });
-//       if (!existingVendor) {
-//         [vendorId] = await knex('vendors').insert({ vendor_name: vendorName, status: 1 });
-//       } else {
-//         vendorId = existingVendor.vendor_id;
-//       }
-//       console.log("Vendor Id: ", vendorId);
-
-//       // Link product to vendor if not already linked
-//       const [existingLink] = await knex('product_to_vendor')
-//         .where({ product_id: productId, vendor_id: vendorId });
-//         console.log(existingLink);
-//       if (!existingLink) {
-//         await knex('product_to_vendor').insert({
-//           product_id: productId,
-//           vendor_id: vendorId,
-//           status: 1, // Set status to 1 in the product_to_vendor table
-//         });
-//       }
-//     }
-//   }
-// }
 
 
 async function updateProductDetails(data) {

@@ -137,16 +137,37 @@ async function getVendorCount(req, res) {
   }
 }
 
+// async function getProducts(req, res) {
+//   try {
+//     const { page = 1, limit = 5 } = req.query;
+//     const data = await dashboardService.getProducts(Number(page), Number(limit));
+//     res.json({ success: true, ...data });
+//   } catch (error) {
+//     console.error('Error fetching products:', error);
+//     res.status(500).json({ success: false, message: 'Internal Server Error' });
+//   }
+// }
+
+
 async function getProducts(req, res) {
   try {
-    const { page = 1, limit = 5 } = req.query;
-    const data = await dashboardService.getProducts(Number(page), Number(limit));
+    const { page = 1, limit = 5, searchTerm = '' } = req.query;
+
+    // Determine filters from request
+    const filters = {};
+    if (req.query.filterByProductName === 'true') filters.productName = searchTerm;
+    if (req.query.filterByStatus === 'true') filters.status = searchTerm;
+    if (req.query.filterByCategory === 'true') filters.category = searchTerm;
+    if (req.query.filterByVendor === 'true') filters.vendor = searchTerm;
+
+    const data = await dashboardService.getProducts(Number(page), Number(limit), filters);
     res.json({ success: true, ...data });
   } catch (error) {
     console.error('Error fetching products:', error);
     res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 }
+
 // Get categories
 async function getCategories(req, res) {
   try {

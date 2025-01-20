@@ -6,7 +6,8 @@ import { NoAuthGuard } from './core/guards/no-auth.guard';
 const routes: Routes = [
   { path: '', redirectTo: 'auth/signup', pathMatch: 'full' },
   { path: 'auth', loadChildren: () => import('./features/auth/auth.module').then(m => m.AuthModule), canActivate: [NoAuthGuard] },
-  { path: 'dashboard', loadChildren: () => import('./features/dashboard/dashboard.module').then(m => m.DashboardModule), canActivate: [AuthGuard]}
+  { path: 'dashboard', loadChildren: () => import('./features/dashboard/dashboard.module').then(m => m.DashboardModule), canActivate: [AuthGuard]},
+  { path: '**', redirectTo: 'auth/login', pathMatch: 'full'}
 ];
 
 @NgModule({

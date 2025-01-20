@@ -145,24 +145,52 @@ export class DashboardComponent implements OnInit {
 
   // }
 
+  // fetchPage(page: number): void {
+  //   if (page < 1 || (this.totalPages && page > this.totalPages)) return;
+
+  //   this.dashboardService.getProducts(page, this.pageSize).subscribe({
+  //     next: (data) => {
+  //       console.log("Products Fetched: ", data.products);
+  //       this.products = data.products;
+  //       this.totalItems = data.total;
+  //       this.currentPage = data.page;
+  //       this.totalPages = Math.ceil(this.totalItems / this.pageSize);
+  //       this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
+
+  //       // Initialize filtered products
+  //       this.applyFilters();
+  //     },
+  //     error: (error) => {
+  //       console.error('Error fetching products:', error);
+  //     },
+  //   });
+  // }
+
+
   fetchPage(page: number): void {
     if (page < 1 || (this.totalPages && page > this.totalPages)) return;
 
-    this.dashboardService.getProducts(page, this.pageSize).subscribe({
+    const params = {
+      page: page.toString(),
+      limit: this.pageSize.toString(),
+      searchTerm: this.searchTerm || '',
+      filterByProductName: this.filterByProductName,
+      filterByStatus: this.filterByStatus,
+      filterByCategory: this.filterByCategory,
+      filterByVendor: this.filterByVendor
+    };
+
+    this.dashboardService.getProducts(params).subscribe({
       next: (data) => {
-        console.log("Products Fetched: ", data.products);
         this.products = data.products;
         this.totalItems = data.total;
         this.currentPage = data.page;
         this.totalPages = Math.ceil(this.totalItems / this.pageSize);
         this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
-
-        // Initialize filtered products
-        this.applyFilters();
       },
       error: (error) => {
         console.error('Error fetching products:', error);
-      },
+      }
     });
   }
 
@@ -649,38 +677,41 @@ export class DashboardComponent implements OnInit {
     this.isFilterDropdownVisible = !this.isFilterDropdownVisible;
   }
 
-  // Apply filters based on selected options
+  // // Apply filters based on selected options
+  // applyFilters(): void {
+
+  //   // If no filter checkboxes are selected, return all products
+  //   if (!this.filterByProductName && !this.filterByStatus && !this.filterByCategory && !this.filterByVendor) {
+  //     this.filteredProducts = [...this.products];
+  //     return;
+  //   }
+
+  //   this.filteredProducts = this.products.filter(product => {
+  //     // Product Name filter (if selected)
+  //     const matchesProductName = this.filterByProductName && product.product_name.toLowerCase().includes(this.searchTerm.toLowerCase());
+
+  //     // Status filter (if selected)
+  //     const matchesStatus = this.filterByStatus && (product.quantity_in_stock > 0 ? 'Available' : 'Sold Out').toLowerCase().includes(this.searchTerm.toLowerCase());
+
+  //     // Category filter (if selected)
+  //     const matchesCategory = this.filterByCategory && product.category_name.toLowerCase().includes(this.searchTerm.toLowerCase());
+
+  //     // Vendor filter (if selected)
+  //     const matchesVendor = this.filterByVendor && product.vendors.some(vendor => vendor.vendor_name.toLowerCase().includes(this.searchTerm.toLowerCase()));
+
+  //     // If any of the selected filters match, include the product in the filtered list
+  //     const matchesSelectedFilters = (this.filterByProductName && matchesProductName) ||
+  //       (this.filterByStatus && matchesStatus) ||
+  //       (this.filterByCategory && matchesCategory) ||
+  //       (this.filterByVendor && matchesVendor);
+
+  //     return matchesSelectedFilters;
+  //   });
+  // }
+
   applyFilters(): void {
-
-    // If no filter checkboxes are selected, return all products
-    if (!this.filterByProductName && !this.filterByStatus && !this.filterByCategory && !this.filterByVendor) {
-      this.filteredProducts = [...this.products];
-      return;
-    }
-
-    this.filteredProducts = this.products.filter(product => {
-      // Product Name filter (if selected)
-      const matchesProductName = this.filterByProductName && product.product_name.toLowerCase().includes(this.searchTerm.toLowerCase());
-
-      // Status filter (if selected)
-      const matchesStatus = this.filterByStatus && (product.quantity_in_stock > 0 ? 'Available' : 'Sold Out').toLowerCase().includes(this.searchTerm.toLowerCase());
-
-      // Category filter (if selected)
-      const matchesCategory = this.filterByCategory && product.category_name.toLowerCase().includes(this.searchTerm.toLowerCase());
-
-      // Vendor filter (if selected)
-      const matchesVendor = this.filterByVendor && product.vendors.some(vendor => vendor.vendor_name.toLowerCase().includes(this.searchTerm.toLowerCase()));
-
-      // If any of the selected filters match, include the product in the filtered list
-      const matchesSelectedFilters = (this.filterByProductName && matchesProductName) ||
-        (this.filterByStatus && matchesStatus) ||
-        (this.filterByCategory && matchesCategory) ||
-        (this.filterByVendor && matchesVendor);
-
-      return matchesSelectedFilters;
-    });
+    this.fetchPage(1);
   }
-
   // Function to get a color class based on index
   getBadgeClass(index: number): string {
     return this.badgeColors[index % this.badgeColors.length]; // Ensures colors repeat

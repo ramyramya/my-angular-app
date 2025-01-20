@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Product } from '../interfaces/product.interface';
@@ -33,12 +33,34 @@ export class DashboardService {
   }
 
 
-  getProducts(page: number, limit: number): Observable<{ success: string; products: Product[]; total: number; page: number; limit: number }> {
-    return this.http.get<{ success: string; products: Product[]; total: number; page: number; limit: number }>(
-      `${this.apiUrl}/products?page=${page}&limit=${limit}`
-    );
-  }
+  // getProducts(page: number, limit: number): Observable<{ success: string; products: Product[]; total: number; page: number; limit: number }> {
+  //   return this.http.get<{ success: string; products: Product[]; total: number; page: number; limit: number }>(
+  //     `${this.apiUrl}/products?page=${page}&limit=${limit}`
+  //   );
+  // }
 
+  getProducts(params: any): Observable<any> {
+    console.log("Params: ", params);
+    let httpParams = new HttpParams()
+      .set('page', params.page)
+      .set('limit', params.limit)
+      .set('searchTerm', params.searchTerm);
+
+    if (params.filterByProductName) {
+      httpParams = httpParams.set('filterByProductName', 'true');
+    }
+    if (params.filterByStatus) {
+      httpParams = httpParams.set('filterByStatus', 'true');
+    }
+    if (params.filterByCategory) {
+      httpParams = httpParams.set('filterByCategory', 'true');
+    }
+    if (params.filterByVendor) {
+      httpParams = httpParams.set('filterByVendor', 'true');
+    }
+
+    return this.http.get(`${this.apiUrl}/products`, { params: httpParams });
+  }
 
   downloadProductAsPDF(product: Product){
     const doc = new jsPDF();

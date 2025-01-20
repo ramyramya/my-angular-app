@@ -48,7 +48,7 @@
       style="width: 200px"
       placeholder="Search products..." 
       [(ngModel)]="searchTerm" 
-      (input)="applyFilters()" />
+      (ngModelChange)="fetchPage(1)" />
   
     <!-- Filter Button (Positioned to the Right) -->
     <button class="btn btn-primary ml-2" (click)="toggleFilterDropdown()">Filter</button>
@@ -60,7 +60,7 @@
           <input 
             type="checkbox" 
             [(ngModel)]="filterByProductName" 
-            (change)="applyFilters()" />
+            (ngModelChange)="fetchPage(1)" />
           Product Name
         </label>
       </div>
@@ -69,7 +69,7 @@
           <input 
             type="checkbox" 
             [(ngModel)]="filterByStatus" 
-            (change)="applyFilters()" />
+            (ngModelChange)="fetchPage(1)" />
           Status
         </label>
       </div>
@@ -78,7 +78,7 @@
           <input 
             type="checkbox" 
             [(ngModel)]="filterByCategory" 
-            (change)="applyFilters()" />
+            (ngModelChange)="fetchPage(1)" />
           Category
         </label>
       </div>
@@ -87,7 +87,7 @@
           <input 
             type="checkbox" 
             [(ngModel)]="filterByVendor" 
-            (change)="applyFilters()" />
+            (ngModelChange)="fetchPage(1)" />
           Vendor
         </label>
       </div>
@@ -120,7 +120,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let product of filteredProducts">
+          <tr *ngFor="let product of products">
             <td><input type="checkbox" class="form-check-input" (change)="onCheckboxChange($event, product)"></td>
             <td>
               <div *ngIf="!selectedProductForEdit || product.product_id !== selectedProductForEdit.product_id">
