@@ -83,8 +83,8 @@ async function login(req, res) {
     }
 
     // Generate access token and refresh token
-    const accessToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    const refreshToken = jwt.sign({ userId: user.id, userNmae: user.username }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const accessToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '1m' });
+    const refreshToken = jwt.sign({ userId: user.id, userNmae: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     // Respond with the tokens
     res.json({
@@ -98,4 +98,42 @@ async function login(req, res) {
   }
 }
 
-module.exports = { signup, login };
+
+async function refresh(req, res){
+  // Decrypt the payload from the request body
+  console.log("Entered refresh Function");
+  const { payload } = req.body;
+  const secretKey = process.env.SECRET_KEY;
+  const decryptedData = CryptoJS.AES.decrypt(payload, secretKey).toString(CryptoJS.enc.Utf8);
+  const refreshData = JSON.parse(decryptedData);
+  console.log("Refresh Data: ", refreshData);
+  const { refreshToken } = refreshData;
+
+  if (!refreshToken) {
+    return res.status(400).json({ message: 'Refresh token required' });
+  }
+
+  try {
+    // Verify refresh token
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    
+    // Find the user (ensure the refresh token matches the user)
+    const user = await knex('users')
+                  .where('id', decoded.userId);
+    console.log("User found in refresh token process");
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+
+    // Generate new access token
+    const newAccessToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '1m' });
+    console.log("new token: ", newAccessToken);
+
+    res.json({ accessToken: newAccessToken, refreshToken: refreshToken });
+  } catch (error) {
+    console.log(error);
+    return res.status(401).json({ message: 'Invalid or expired refresh token' });
+  }
+};
+
+module.exports = { signup, login, refresh };

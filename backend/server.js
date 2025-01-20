@@ -13,6 +13,7 @@ app.use(cors());
 
 app.use(bodyParser.json());
 app.use(encryptionMiddleware);
+
 app.use('/api/v1', routes);
 
 const PORT = process.env.PORT || 3000;

@@ -50,5 +50,33 @@ export class AuthService {
 
     return currentTime < expirationTime;
   }
+
+  // Store tokens in localStorage or sessionStorage
+  storeTokens(accessToken: string, refreshToken: string): void {
+    sessionStorage.setItem('access_token', accessToken);
+    sessionStorage.setItem('refresh_token', refreshToken);
+  }
+
+  // Clear tokens when user logs out
+  clearTokens(): void {
+    sessionStorage.removeItem('access_token');
+    sessionStorage.removeItem('refresh_token');
+  }
+
+  // Refresh the access token using the refresh token
+  refreshAccessToken(): Observable<any> {
+    const refreshToken = sessionStorage.getItem('refresh_token');
+    
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    return this.http.post<any>(`${this.apiUrl}/refresh`, { refreshToken });
+  }
+
+  // Retrieve the access token (e.g., to include in HTTP request headers)
+  getAccessToken(): string | null {
+    return sessionStorage.getItem('access_token');
+  }
 }
 
