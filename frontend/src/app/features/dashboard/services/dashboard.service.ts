@@ -144,8 +144,8 @@ doc.text(`Status: ${product.product_status === 1 ? 'Available' : 'Sold Out'}`, 1
   }
 
   // Service Method to Fetch User Files
-getUserFiles(): Observable<{ files: { key: string; url: string }[] }> {
-  return this.http.get<{ files: { key: string; url: string }[] }>(`${this.apiUrl}/get-user-files`);
+getUserFiles(): Observable<{ files: { key: string; url: string; type: string }[] }> {
+  return this.http.get<{ files: { key: string; url: string, type: string }[] }>(`${this.apiUrl}/get-user-files`);
 }
   
 }

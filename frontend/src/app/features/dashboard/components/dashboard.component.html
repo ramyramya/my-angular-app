@@ -322,8 +322,8 @@
       </button>
     </div>
 
-    <!-- File List -->
-    <ul class="list-group">
+    
+    <!--<ul class="list-group">
       <li *ngFor="let file of files" class="list-group-item d-flex align-items-center">
         <input
           type="checkbox"
@@ -335,7 +335,28 @@
           {{ file.key }}
         </a>
       </li>
-    </ul>
+    </ul>-->
+
+    <!-- File List -->
+<ul class="list-group">
+  <li *ngFor="let file of files" class="list-group-item d-flex align-items-center">
+    <input
+      type="checkbox"
+      class="form-check-input me-2"
+      [checked]="selectedFiles.has(file.key)"
+      (change)="toggleFileSelection(file.key)"
+    />
+    <span
+      class="text-truncate text-primary"
+      style="cursor: pointer;"
+      (click)="previewFile(file)"
+      title="{{ file.key }}"
+    >
+      {{ file.key }}
+    </span>
+  </li>
+</ul>
+
   </div>
 </div>
 
@@ -534,3 +555,42 @@
 </div>
 
 
+<!-- File Preview Modal -->
+<div
+  class="modal fade"
+  id="filePreviewModal"
+  tabindex="-1"
+  aria-labelledby="filePreviewLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="filePreviewLabel">File Preview</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="previewedFile?.type === 'image'; else otherFilePreview">
+          <img
+            [src]="previewedFile?.url"
+            alt="Preview"
+            class="img-fluid"
+          />
+        </div>
+        <ng-template #otherFilePreview>
+          <iframe
+            *ngIf="safeUrl" 
+            [src]="safeUrl"
+            frameborder="0"
+            style="width: 100%; height: 400px;"
+          ></iframe>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</div>

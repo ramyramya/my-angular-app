@@ -546,6 +546,7 @@ async function getUserFiles(req, res){
     const files = data.Contents.map((file) => ({
       key: file.Key,
       url: `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${file.Key}`,
+      type: file.ContentType || 'unknown', // ContentType from S3 object if available
     }));
 
     res.json({ files });

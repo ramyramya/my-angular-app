@@ -8,6 +8,8 @@ import { ToastrService } from 'ngx-toastr';
 import * as XLSX from 'xlsx';
 import * as JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+
 
 
 @Component({
@@ -65,12 +67,16 @@ export class DashboardComponent implements OnInit {
   filterByVendor = false;
   selectedFileForUpload: File | null = null;
 
-  files: { key: string; url: string }[] = [];
+  files: { key: string; url: string; type: string }[] = [];
   selectedFiles: Set<string> = new Set();
+  previewedFile: { key: string; url: string; type: string } | null = null;
+
+  safeUrl : SafeResourceUrl | null = null;  
 
   constructor(
     private dashboardService: DashboardService, private toastr: ToastrService,
-    private fb: FormBuilder // Form builder service for reactive forms
+    private fb: FormBuilder, // Form builder service for reactive forms
+    private sanitizer: DomSanitizer
   ) {
     this.addProductForm = this.fb.group({
       productName: ['', Validators.required],
@@ -265,6 +271,7 @@ export class DashboardComponent implements OnInit {
       };
 
       this.submitProduct(productData);
+      
     } catch (error) {
       console.error('Error adding product:', error);
     }
@@ -820,5 +827,29 @@ export class DashboardComponent implements OnInit {
       });
     }
   }
+
+  previewFile(file: { key: string; url: string; type: string }) {
+    // Set the previewed file for reference
+    this.previewedFile = file;
+  
+    // Safely sanitize the file's URL and store it in a separate property
+    this.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(file.url);
+  
+    // Get the modal element
+  const previewModalElement = document.getElementById('filePreviewModal') as HTMLElement;
+
+  // Initialize the modal
+  const previewModal = new bootstrap.Modal(previewModalElement);
+
+  // Add an event listener for when the modal is hidden
+  previewModalElement.addEventListener('hidden.bs.modal', () => {
+    this.previewedFile = null;
+    this.safeUrl = null;
+  });
+
+  // Show the modal
+  previewModal.show();
+  }
+  
 }
 
