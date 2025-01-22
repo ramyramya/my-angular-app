@@ -795,7 +795,7 @@ async function updateProductDetails(data) {
           .where({ product_id: productId })
           .update({
             quantity_in_stock: quantity,
-            unit_price: unit,
+            unit: unit,
             status: productStatus,
           });
       }

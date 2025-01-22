@@ -73,6 +73,8 @@ export class DashboardComponent implements OnInit {
 
   safeUrl : SafeResourceUrl | null = null;  
 
+  selectedFileName: string = '';
+
   constructor(
     private dashboardService: DashboardService, private toastr: ToastrService,
     private fb: FormBuilder, // Form builder service for reactive forms
@@ -646,11 +648,48 @@ export class DashboardComponent implements OnInit {
       const sheetName: string = workbook.SheetNames[0];
       const sheetData: XLSX.WorkSheet = workbook.Sheets[sheetName];
       this.fileData = XLSX.utils.sheet_to_json(sheetData);
+      this.selectedFileName = target.files[0].name;
       console.log('Parsed Data:', this.fileData);
     };
     reader.readAsArrayBuffer(target.files[0]);
   }
 
+  // Handle drag over event to allow file drop
+  onImportFileDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  // Handle file drop
+  onImportFileDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const files = event.dataTransfer?.files;
+    if (files && files.length === 1) {
+      this.handleFile(files[0]);
+    }
+  }
+
+  // Handle drag leave event to reset styles
+  onImportFileDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  // Handle the dropped file
+  private handleFile(file: File): void {
+    this.selectedFileName = file.name;
+    const reader: FileReader = new FileReader();
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      const arrayBuffer: ArrayBuffer = e.target!.result as ArrayBuffer;
+      const workbook: XLSX.WorkBook = XLSX.read(arrayBuffer, { type: 'array' });
+      const sheetName: string = workbook.SheetNames[0];
+      const sheetData: XLSX.WorkSheet = workbook.Sheets[sheetName];
+      this.fileData = XLSX.utils.sheet_to_json(sheetData);
+      console.log('Parsed Data:', this.fileData);
+    };
+    reader.readAsArrayBuffer(file);
+  }
 
   // Upload data to backend
   uploadData(): void {
@@ -659,6 +698,7 @@ export class DashboardComponent implements OnInit {
         next: (res) => {
           console.log('Data updated successfully!', res);
           this.closeModal("importModal");
+          this.selectedFileName = '';
           this.toastr.success("Data Uploaded Successfully", "Success");
         },
         error: (err) => {
@@ -781,6 +821,7 @@ export class DashboardComponent implements OnInit {
         })
           .then(() => {
             alert('File uploaded successfully!');
+            this.selectedFileForUpload = null;
             this.getUserFiles();
           })
           .catch((err) => {
