@@ -201,7 +201,8 @@ async function getProducts(page = 1, limit = 5, filters = {}) {
       )
       .join('categories', 'products.category_id', '=', 'categories.category_id')
       .where('products.status', 1)
-      .andWhere('categories.status', 1);
+      .andWhere('categories.status', 1)
+      .orderBy('products.product_name', 'asc');
 
     // Apply filters dynamically
     if (filters.productName) {
