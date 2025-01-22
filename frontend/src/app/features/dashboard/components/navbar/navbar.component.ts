@@ -159,6 +159,7 @@ export class NavbarComponent implements OnInit {
     const modalElement = document.getElementById('uploadModal');
     if (modalElement) {
       const modal = bootstrap.Modal.getInstance(modalElement)!;
+      this.selectedFile = null;
       modal.hide();
     }
   }
@@ -180,5 +181,31 @@ export class NavbarComponent implements OnInit {
       }
     });
 }
+
+onDragOver(event: DragEvent): void {
+  event.preventDefault();
+  event.stopPropagation();
+  // Highlight the drop area
+  (event.target as HTMLElement).classList.add('dragover');
+}
+
+onDragLeave(event: DragEvent): void {
+  event.preventDefault();
+  event.stopPropagation();
+  // Remove the highlight from the drop area
+  (event.target as HTMLElement).classList.remove('dragover');
+}
+
+onDrop(event: DragEvent): void {
+  event.preventDefault();
+  event.stopPropagation();
+  const files = event.dataTransfer?.files;
+  if (files && files[0]) {
+    this.selectedFile = files[0];
+  }
+  // Remove the highlight from the drop area
+  (event.target as HTMLElement).classList.remove('dragover');
+}
+
 
 }

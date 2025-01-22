@@ -730,7 +730,30 @@ export class DashboardComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       this.selectedFileForUpload = input.files[0];
+      
     }
+  }
+
+  // Handle drag over event to allow file drop
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  // Handle file drop
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      this.selectedFileForUpload = files[0];
+    }
+  }
+
+  // Handle drag leave event to reset styles
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
   }
 
   // Upload the file

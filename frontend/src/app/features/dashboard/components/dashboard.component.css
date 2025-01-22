@@ -80,3 +80,31 @@
 .bg-transparent-yellow {
   background-color: rgba(255, 193, 7, 0.7); /* Yellow with 30% opacity */
 }
+
+/* Add custom styles for the file upload area */
+.upload-area {
+  min-height: 200px;
+  border: 2px dashed #aaa;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.upload-area p {
+  margin: 0;
+  font-size: 14px;
+  color: #888;
+}
+
+.upload-area button {
+  margin-top: 10px;
+}
+
+.upload-area .file-name {
+  margin-top: 20px;
+  color: #555;
+}
+

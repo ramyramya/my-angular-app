@@ -33,3 +33,57 @@
   border: none !important;
   padding: 0 !important;
 }
+
+
+/* Style for the upload area */
+.upload-area {
+  border: 2px dashed #007bff;
+  background-color: #f8f9fa;
+  padding: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.upload-area:hover {
+  background-color: #e9ecef;
+}
+
+.upload-area .upload-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+}
+
+.upload-area .upload-message i {
+  color: #007bff;
+}
+
+.upload-area .upload-message p {
+  margin-top: 10px;
+  font-size: 1rem;
+}
+
+.upload-area .dragover {
+  background-color: #e2e6ea;
+  border-color: #0056b3;
+}
+
+/* Style for the selected file name */
+.upload-area .mt-3 {
+  font-size: 0.9rem;
+  color: #495057;
+  font-weight: 500;
+}
+
+/* Button hover effects */
+.modal-footer button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.modal-footer button:not(:disabled):hover {
+  background-color: #0056b3;
+  color: white;
+}
