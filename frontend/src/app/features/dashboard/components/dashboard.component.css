@@ -11,7 +11,7 @@
 .table .btn {
   border: none;
   background: transparent;
-  padding: 0.375rem 0.75rem; /* Adjust padding if needed */
+  padding: 0.375rem 0.6rem; /* Adjust padding if needed */
   font-size: 1.125rem; /* Icon size */
   color: #000; /* Icon color */
 }

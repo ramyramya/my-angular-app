@@ -22,6 +22,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import jwt_decode from 'jwt-decode';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -29,7 +30,7 @@ import jwt_decode from 'jwt-decode';
 export class AuthService {
   private apiUrl = `${environment.apiUrl}/auth`;  // Update with your base API URL
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   login(loginData: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, loginData);
@@ -77,6 +78,12 @@ export class AuthService {
   // Retrieve the access token (e.g., to include in HTTP request headers)
   getAccessToken(): string | null {
     return sessionStorage.getItem('access_token');
+  }
+
+
+  logout(): void{
+    this.clearTokens();
+    this.router.navigateByUrl('/auth/login');
   }
 }
 

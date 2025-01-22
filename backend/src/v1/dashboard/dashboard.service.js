@@ -333,48 +333,84 @@ async function getVendors() {
   }
 }
 
-// Add Product and Vendor relationship
-async function addProduct(productData) {
-  console.log("Product Data: ", productData);
-  const trx = await knex.transaction(); // Start a transaction
+// // Add Product and Vendor relationship
+// async function addProduct(productData) {
+//   console.log("Product Data: ", productData);
+//   const trx = await knex.transaction(); // Start a transaction
+
+//   try {
+//     // Insert the new product into the 'products' table
+//     const newProduct = await trx('products')
+//       .insert({
+//         product_name: productData.productName,
+//         category_id: productData.category,
+//         quantity_in_stock: productData.quantity,
+//         unit_price: productData.unitPrice, 
+//         unit: productData.unit,
+//         product_image: productData.productImage, // Assuming productData has productImage
+//         status: productData.status
+//       })
+
+//       console.log("Hello:", newProduct);
+      
+
+//     // Insert the relationship into 'product_to_vendor' table
+//     const productToVendor = await trx('product_to_vendor')
+//       .insert({
+//         vendor_id: productData.vendor, // Assuming vendor is the ID
+//         product_id: newProduct, // Use the ID of the newly inserted product
+//         status: productData.status // Assuming status is the same for vendor
+//       })
+      
+
+//     // Commit the transaction
+//     await trx.commit();
+
+//     // Return the newly added product and vendor relationship
+//     return { product: newProduct, productToVendor };
+
+//   } catch (error) {
+//     // Rollback the transaction in case of error
+//     await trx.rollback();
+//     throw error;  // Rethrow the error to be handled by the controller
+//   }
+// }
+
+
+async function addProduct(productData, vendors) {
+  const trx = await knex.transaction();
 
   try {
-    // Insert the new product into the 'products' table
+    // Insert the new product
     const newProduct = await trx('products')
       .insert({
         product_name: productData.productName,
         category_id: productData.category,
         quantity_in_stock: productData.quantity,
-        unit_price: productData.unitPrice, 
+        unit_price: productData.unitPrice,
         unit: productData.unit,
-        product_image: productData.productImage, // Assuming productData has productImage
+        product_image: productData.productImage,
         status: productData.status
       })
+        // returns product_id
 
-      console.log("Hello:", newProduct);
-      
+    // Insert the relationships into 'product_to_vendor' table for each vendor
+    const productVendorRelationships = vendors.map(vendorId => ({
+      vendor_id: vendorId,
+      product_id: newProduct,
+      status: productData.status
+    }));
 
-    // Insert the relationship into 'product_to_vendor' table
-    const productToVendor = await trx('product_to_vendor')
-      .insert({
-        vendor_id: productData.vendor, // Assuming vendor is the ID
-        product_id: newProduct, // Use the ID of the newly inserted product
-        status: productData.status // Assuming status is the same for vendor
-      })
-      
+    await trx('product_to_vendor').insert(productVendorRelationships);
 
-    // Commit the transaction
     await trx.commit();
-
-    // Return the newly added product and vendor relationship
-    return { product: newProduct, productToVendor };
-
+    return { product: newProduct, productToVendor: productVendorRelationships };
   } catch (error) {
-    // Rollback the transaction in case of error
     await trx.rollback();
-    throw error;  // Rethrow the error to be handled by the controller
+    throw error;
   }
 }
+
 
 async function moveToCart(products){
   return knex.transaction(async (trx) => {

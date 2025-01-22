@@ -103,12 +103,13 @@ export class EncryptionInterceptor implements HttpInterceptor {
               // Handle error if refresh token fails, maybe log out the user
               console.error("Refresh token failed", refreshError);
               this.authService.clearTokens(); // Optionally, clear tokens and redirect to login
-              return throwError(refreshError); // Return an error if refresh fails
+              this.authService.logout();
+              return throwError(()=>refreshError); // Return an error if refresh fails
             })
           );
         }
 
-        return throwError(error); // Return the error if it's not a 401
+        return throwError(()=>error); // Return the error if it's not a 401
       })
     );
   }

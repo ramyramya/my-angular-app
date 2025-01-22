@@ -6,7 +6,7 @@
 <div class="container-fluid  mt-4">
   <div class="row">
   <!-- Entire Inventory Section with White Background as One Box -->
-  <div class="col-md-10">
+  <div class="col-md-9">
   <div class="bg-white p-4 rounded shadow-sm">
 
     <!-- Inventory Header Section -->
@@ -23,18 +23,18 @@
 
         <!-- Action Buttons -->
         <div>
-          <button class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#moveToModal">
-            <i class="bi bi-arrow-right-circle"></i> Move To
+          <button class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#moveToModal" [disabled]="selectedProducts.length === 0">
+            <i class="bi bi-arrow-right-circle"></i> Move To cart
           </button>
-          <button class="btn btn-outline-primary me-2" (click)="downloadAllSelected()">
+          <button class="btn btn-outline-primary me-2" (click)="downloadAllSelected()" [disabled]="selectedProducts.length === 0">
             <i class="bi bi-download"></i> Download All
           </button>
           <!-- Import Button -->
-          <button class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#importModal">
+          <button class="btn btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#importModal">
             <i class="bi bi-upload"></i> Import
           </button>
           <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#addProductModal">
-            <i class="bi bi-plus-circle"></i> Add Product
+            <i class="bi bi-plus-circle"></i> Add 
           </button>
         </div>
       </div>
@@ -153,9 +153,15 @@
             <td>
               <div *ngIf="!selectedProductForEdit || product.product_id !== selectedProductForEdit.product_id">
                 <ul class="list-unstyled">
-                  <li *ngFor="let vendor of product.vendors; let i = index">
+                  <li *ngFor="let vendor of product.vendors | slice:0 : 2; let i = index">
                     <span class="badge rounded-pill" [ngClass]="getBadgeClass(i)">
                       {{ vendor.vendor_name }}
+                    </span>
+                  </li>
+
+                  <li *ngIf="product.vendors.length > 2">
+                    <span class="badge rounded-pill bg-secondary">
+                      +{{ product.vendors.length - 2 }}
                     </span>
                   </li>
                 </ul>
@@ -300,7 +306,7 @@
 
 
   <!-- Upload and Download Files Section Container -->
-<div class="col-md-2">
+<div class="col-md-3">
   <div class="bg-white p-4 rounded shadow-sm">
     <!-- File Management Section -->
     <h4 class="mb-3">File Management</h4>
@@ -311,7 +317,7 @@
       </button>
 
       <!-- Download Selected Button -->
-      <button class="btn btn-outline-primary btn-sm" (click)="downloadSelectedFiles()">
+      <button class="btn btn-outline-primary btn-sm" (click)="downloadSelectedFiles()" [disabled]="selectedFiles.size === 0">
         <i class="bi bi-download"></i> Download Selected
       </button>
     </div>
@@ -363,7 +369,7 @@
             <!-- Vendor -->
             <div class="mb-3">
               <label for="vendor" class="form-label">Vendor</label>
-              <select id="vendor" class="form-select" formControlName="vendor">
+              <select id="vendor" class="form-select" formControlName="vendors" multiple>
                 <option *ngFor="let vendor of vendors" [value]="vendor.vendor_id">
                   {{ vendor.vendor_name }}
                 </option>

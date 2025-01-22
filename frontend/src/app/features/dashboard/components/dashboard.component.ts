@@ -75,7 +75,8 @@ export class DashboardComponent implements OnInit {
     this.addProductForm = this.fb.group({
       productName: ['', Validators.required],
       category: ['', Validators.required],
-      vendor: ['', Validators.required],
+      //vendor: ['', Validators.required],
+      vendors: [[], Validators.required], // Change to an array for multiple selections
       quantity: [0, [Validators.required, Validators.min(1)]],
       unitPrice: [0, [Validators.required, Validators.min(0)]],
       unit: ['', Validators.required],
@@ -246,6 +247,7 @@ export class DashboardComponent implements OnInit {
   }
 
   async addProduct(): Promise<void> {
+    console.log("Add Product Called");
     if (this.addProductForm.invalid) {
       return;
     }
