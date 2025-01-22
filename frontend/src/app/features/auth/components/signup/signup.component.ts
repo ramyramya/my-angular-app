@@ -30,6 +30,7 @@ export class SignupComponent implements OnInit {
 
   onSubmit(): void {
     if (this.signupForm.valid) {
+      console.log(this.signupForm.value);
       this.authService.signup(this.signupForm.value).subscribe({
 
         next:

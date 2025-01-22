@@ -30,7 +30,7 @@ export class LoginComponent implements OnInit {
   onLogin(): void {
     if (this.loginForm.valid) {
       const loginData = this.loginForm.value;
-      //console.log('Logging in with:', loginData);
+      console.log('Logging in with:', loginData);
 
       this.authService.login(loginData).subscribe(
         {
