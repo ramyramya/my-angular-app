@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { DashboardService } from '../services/dashboard.service';
 import { Product } from '../interfaces/product.interface';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -9,6 +9,7 @@ import * as XLSX from 'xlsx';
 import * as JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { io } from 'socket.io-client';
 
 
 
@@ -18,6 +19,13 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
+  @ViewChild('chatMessages') chatMessages !: ElementRef;
+  socket: any;
+  isChatVisible = false;
+  chatMessage = '';
+  messages: { sender: string, text: string }[] = [];
+  users: { id: number, username: string }[] = [];
+  selectedUserId !: number;
 
   // Define the transparent colors for badges (violet, pink, yellow)
   badgeColors = [
@@ -42,6 +50,7 @@ export class DashboardComponent implements OnInit {
   cartPages: number[] = [];
 
   userId !: number;
+  userName !: string;
   addProductForm: FormGroup; // Form group for the Add Product modal
   categories: any[] = []; // Categories for the dropdown
   vendors: any[] = []; // Vendors for the dropdown
@@ -95,6 +104,7 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     this.dashboardService.getUserData().subscribe(data => {
       this.userId = data.userId;
+      this.userName = data.username;
     });
     this.getVendorCount();
     this.fetchPage(this.currentPage);
@@ -102,6 +112,33 @@ export class DashboardComponent implements OnInit {
     this.loadVendors();
     this.fetchCartPage(this.currentCartPage);
     this.getUserFiles();
+
+    this.socket = io('http://localhost:3000', {
+      transports: ['websocket', 'polling'], // Ensure fallback options are set
+    });
+    
+
+    this.socket.on('connect', () => {
+      console.log('Connected to server');
+    });
+
+    
+    this.socket.on('chat message', (msg: { sender: string, text: string }) => {
+      console.log('Received message:', msg); // Debug log
+      this.messages.push(msg);
+      setTimeout(() => {
+        this.chatMessages.nativeElement.scrollTop = this.chatMessages.nativeElement.scrollHeight;
+      }, 100);
+    });
+    
+    this.dashboardService.getUserData().subscribe(data => {
+      console.log(`Joining room with userId: ${data.userId}`);
+      this.socket.emit('join', data.userId);
+    });
+
+    this.dashboardService.getUsers().subscribe(users => {
+      this.users = users;
+    });
   }
 
   ngDoCheck(): void {
@@ -111,6 +148,20 @@ export class DashboardComponent implements OnInit {
       this.flag = 0;
     }
   }
+
+  toggleChat(): void {
+    this.isChatVisible = !this.isChatVisible;
+  }
+
+  sendMessage(): void {
+    if (this.chatMessage.trim()) {
+      const message = { sender: this.userName, text: this.chatMessage};
+      console.log('Sending message:', message); // Debug log
+      this.socket.emit('chat message', message);
+      this.chatMessage = '';
+    }
+  }
+  
 
 
   toggleTable(view: string): void {

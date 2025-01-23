@@ -147,6 +147,11 @@ doc.text(`Status: ${product.product_status === 1 ? 'Available' : 'Sold Out'}`, 1
 getUserFiles(): Observable<{ files: { key: string; url: string; type: string }[] }> {
   return this.http.get<{ files: { key: string; url: string, type: string }[] }>(`${this.apiUrl}/get-user-files`);
 }
+
+
+getUsers(): Observable<{ id: number, username: string }[]> {
+  return this.http.get<{ id: number, username: string }[]>(`${this.apiUrl}/users`);
+}
   
 }
 

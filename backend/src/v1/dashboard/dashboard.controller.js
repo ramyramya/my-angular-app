@@ -553,6 +553,16 @@ async function getUserFiles(req, res){
   });
 }
 
+async function getUsers(req, res) {
+  try {
+    const users = await dashboardService.fetchAllUsers();
+    res.json(users);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+}
+
 
 module.exports = {
   getUserInfo,
@@ -571,7 +581,8 @@ module.exports = {
   deleteCartItem,
   updateProducts,
   getPresignedUrlForFile,
-  getUserFiles
+  getUserFiles,
+  getUsers
 };
 
 

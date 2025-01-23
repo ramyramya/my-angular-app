@@ -839,6 +839,16 @@ async function updateProductDetails(data) {
 }
 
 
+async function fetchAllUsers() {
+  try {
+    const users = await knex('users').select('id', 'username');
+    return users;
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   fetchUserInfo,
   getVendorCount,
@@ -852,5 +862,6 @@ module.exports = {
   deleteProductAndVendors,
   updateProductAndVendors,
   deleteCartItem,
-  updateProductDetails
+  updateProductDetails,
+  fetchAllUsers,
 };

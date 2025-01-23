@@ -1,6 +1,28 @@
 <app-navbar></app-navbar>
 
 
+<!-- Chat Icon -->
+<div class="chat-icon" (click)="toggleChat()">
+  <i class="bi bi-chat-dots"></i>
+</div>
+
+<!-- Chat Window -->
+<div class="chat-window" *ngIf="isChatVisible">
+  <div class="chat-header">
+    <h5>Chat</h5>
+    <button (click)="toggleChat()">Close</button>
+  </div>
+  <div class="chat-messages" #chatMessages>
+    <div *ngFor="let message of messages">
+      <strong>{{ message.sender }}:</strong> {{ message.text }}
+    </div>
+  </div>
+  <div class="chat-input">
+    
+    <input [(ngModel)]="chatMessage" (keyup.enter)="sendMessage()" placeholder="Type a message..." />
+    <button (click)="sendMessage()">Send</button>
+  </div>
+</div>
 
 
 <div class="container-fluid  mt-4">
@@ -669,3 +691,6 @@
     </div>
   </div>
 </div>
+
+
+

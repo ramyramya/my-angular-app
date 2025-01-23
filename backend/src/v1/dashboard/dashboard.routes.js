@@ -35,6 +35,7 @@ router.delete('/delete-cart-item/:cartId', authMiddleware, dashboardController.d
 router.post('/update-products', authMiddleware, dashboardController.updateProducts);
 router.post('/get-presigned-url-for-file', authMiddleware, dashboardController.getPresignedUrlForFile);
 router.get('/get-user-files', authMiddleware, dashboardController.getUserFiles);
+router.get('/users', authMiddleware, dashboardController.getUsers);
 
 module.exports = router;
 
