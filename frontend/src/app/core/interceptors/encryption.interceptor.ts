@@ -6,11 +6,12 @@ import { map, catchError, switchMap } from 'rxjs/operators';
 import * as CryptoJS from 'crypto-js';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../features/auth/services/auth.service';
+import { Router } from '@angular/router';
 
 @Injectable()
 export class EncryptionInterceptor implements HttpInterceptor {
-  constructor(private authService: AuthService) {}
-
+  constructor(private authService: AuthService, private router: Router) {}
+  private isRefreshing = false;
   private secretKey = environment.secretKey;
 
   // Method to encrypt data before sending the request
@@ -78,39 +79,87 @@ export class EncryptionInterceptor implements HttpInterceptor {
         return event; // Return the modified event with the decrypted body
       }),
 
+      // catchError((error: HttpErrorResponse) => {
+      //   if (error.status === 401) {
+      //     // Handle the refresh token logic for expired access token
+      //     console.log("Access token expired, refreshing...");
+
+      //     return this.authService.refreshAccessToken().pipe(
+      //       switchMap((tokens: any) => {
+      //         // Store the new tokens
+      //         this.authService.storeTokens(tokens.accessToken, tokens.refreshToken);
+
+      //         // Clone the original request and add the new access token
+      //         const clonedRequest = req.clone({
+      //           setHeaders: {
+      //             Authorization: `${tokens.accessToken}`,
+      //           },
+      //         });
+
+      //         // Retry the original request with the new access token
+      //         return next.handle(clonedRequest);
+      //       }),
+
+      //       catchError((refreshError) => {
+      //         // Handle error if refresh token fails, maybe log out the user
+      //         console.error("Refresh token failed", refreshError);
+      //         this.authService.clearTokens(); // Optionally, clear tokens and redirect to login
+      //         this.authService.logout();
+      //         return throwError(()=>refreshError); // Return an error if refresh fails
+      //       })
+      //     );
+      //   }
+
+      //   return throwError(()=>error); // Return the error if it's not a 401
+      // })
+
+
       catchError((error: HttpErrorResponse) => {
         if (error.status === 401) {
-          // Handle the refresh token logic for expired access token
-          console.log("Access token expired, refreshing...");
+          const isRefreshValid = error.error?.isRefreshValid;
 
-          return this.authService.refreshAccessToken().pipe(
-            switchMap((tokens: any) => {
-              // Store the new tokens
-              this.authService.storeTokens(tokens.accessToken, tokens.refreshToken);
+          // If refresh token is invalid or expired, logout and navigate to login
+          if (isRefreshValid === false) {
+            console.log('Refresh token invalid/expired, logging out...');
+            this.authService.logout();
+            this.router.navigateByUrl('/auth/login');
+            return throwError(() => new Error('Session expired, please log in again'));
+          }
 
-              // Clone the original request and add the new access token
-              const clonedRequest = req.clone({
-                setHeaders: {
-                  Authorization: `${tokens.accessToken}`,
-                },
-              });
+          // If refresh token is valid, attempt to refresh tokens
+          if (!this.isRefreshing) {
+            this.isRefreshing = true;
+            return this.authService.refreshAccessToken().pipe(
+              switchMap((tokens: any) => {
+                this.isRefreshing = false;
 
-              // Retry the original request with the new access token
-              return next.handle(clonedRequest);
-            }),
+                // Set new access token
+                this.authService.storeTokens(tokens.accessToken, tokens.refreshToken);
 
-            catchError((refreshError) => {
-              // Handle error if refresh token fails, maybe log out the user
-              console.error("Refresh token failed", refreshError);
-              this.authService.clearTokens(); // Optionally, clear tokens and redirect to login
-              this.authService.logout();
-              return throwError(()=>refreshError); // Return an error if refresh fails
-            })
-          );
+                // Retry the failed request with the new access token
+                const clonedRequest = req.clone({
+                  setHeaders: {
+                    Authorization: `${tokens.accessToken}`,
+                  },
+                });
+                return next.handle(clonedRequest);
+              }),
+              catchError((refreshError) => {
+                this.isRefreshing = false;
+
+                // If refreshing fails, log out and navigate to login
+                console.error('Refresh token failed:', refreshError);
+                this.authService.logout();
+                this.router.navigateByUrl('/auth/login');
+                return throwError(() => new Error('Session expired, please log in again'));
+              })
+            );
+          }
         }
 
-        return throwError(()=>error); // Return the error if it's not a 401
+        return throwError(() => error);
       })
+    
     );
   }
 }

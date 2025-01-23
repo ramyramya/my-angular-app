@@ -51,6 +51,7 @@ function authMiddleware(req, res, next) {
       return res.status(401).json({
         success: false,
         message: 'Access Denied: Invalid Token',
+        isExpired:false,
       });
     }
   }

@@ -77,8 +77,8 @@ async function login(req, res) {
     }
 
     // Generate access token and refresh token
-    const accessToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '10m' });
-    const refreshToken = jwt.sign({ userId: user.id, userNmae: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const accessToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '1m' });
+    const refreshToken = jwt.sign({ userId: user.id, userNmae: user.username }, process.env.JWT_SECRET, { expiresIn: '5m' });
 
     // Respond with the tokens
     res.json({
@@ -118,19 +118,19 @@ async function refresh(req, res){
     console.log("User found in refresh token process");
     //console.log("User: ", user);
     if (!user) {
-      return res.status(401).json({ message: 'User not found' });
+      return res.status(401).json({ message: 'User not found' ,  isRefreshValid: false});
     }
 
     // Generate new access token
-    const newAccessToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '10m' });
+    const newAccessToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '1m' });
     console.log("new token: ", newAccessToken);
 
     res.json({ accessToken: newAccessToken, refreshToken: refreshToken });
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
-        return res.status(401).json({ error: 'Refresh token expired' });
+        return res.status(401).json({ error: 'Refresh token expired' , isRefreshValid: false});
     }
-    return res.status(401).json({ error: 'Invalid refresh token' });
+    return res.status(401).json({ error: 'Invalid refresh token' ,  isRefreshValid: false});
 }
 };
 
