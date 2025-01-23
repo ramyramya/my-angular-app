@@ -77,8 +77,8 @@ async function login(req, res) {
     }
 
     // Generate access token and refresh token
-    const accessToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '1m' });
-    const refreshToken = jwt.sign({ userId: user.id, userNmae: user.username }, process.env.JWT_SECRET, { expiresIn: '5m' });
+    const accessToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '10m' });
+    const refreshToken = jwt.sign({ userId: user.id, userNmae: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     // Respond with the tokens
     res.json({
@@ -122,7 +122,7 @@ async function refresh(req, res){
     }
 
     // Generate new access token
-    const newAccessToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '1m' });
+    const newAccessToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '10m' });
     console.log("new token: ", newAccessToken);
 
     res.json({ accessToken: newAccessToken, refreshToken: refreshToken });
