@@ -1,4 +1,4 @@
-// filepath: /src/v1/auth/auth.controller.js
+
 const User = require('../../models/User');
 const userSchema = require('../../middleware/validators/userValidator');
 const CryptoJS = require('crypto-js');
@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt')
 require('dotenv').config();
 const knex = require('../../mysql/knex');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 
 
 async function signup(req, res) {
@@ -27,13 +28,6 @@ async function signup(req, res) {
     console.log(username);
 
     const hashedPassword = await bcrypt.hash(userData.password, 10);
-
-
-    /*const user = await User.query().insert({
-      ...userData,
-      username,
-      password: hashedPassword
-    });*/
     // Insert user into the database using Knex
     const [userId] = await knex('users').insert({
       ...userData,
@@ -72,14 +66,14 @@ async function login(req, res) {
       .first();
 
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.json({ success: false, message: 'Invalid credentials' });
     }
 
     // Check if the password is valid
     const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.json({ success: false, message: 'Invalid credentials' });
     }
 
     // Generate access token and refresh token
@@ -140,4 +134,101 @@ async function refresh(req, res){
 }
 };
 
-module.exports = { signup, login, refresh };
+
+async function forgotPassword(req, res){
+
+  // Decrypt the payload from the request body
+  const { payload } = req.body;
+  const secretKey = process.env.SECRET_KEY;
+  const decryptedData = CryptoJS.AES.decrypt(payload, secretKey).toString(CryptoJS.enc.Utf8);
+  const parsedData = JSON.parse(decryptedData);
+  const { email } = parsedData;
+
+  try {
+    // Check if the email exists
+    const user = await knex('users').where({ email }).first();
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Generate a reset token using crypto-js
+    const token = CryptoJS.lib.WordArray.random(32).toString(CryptoJS.enc.Hex);
+    const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1-hour expiry
+
+    
+    // Update the user with the reset token and expiry
+    await knex('users')
+      .where({ email })
+      .update({
+        resetToken: token,
+        resetTokenExpiry,
+      });
+
+    // Configure SMTP
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    // Send reset email
+    const resetUrl = `${process.env.FRONTEND_URL}/auth/reset-password?token=${token}`;
+    await transporter.sendMail({
+      from: 'ramyasenapati2004@gmail.com',
+      to: email,
+      subject: 'Password Reset Request',
+      html: `<p>You requested a password reset. Click the link below to reset your password:</p>
+             <a href="${resetUrl}">${resetUrl}</a>
+             <p>This link is valid for 1 hour.</p>`,
+    });
+
+    res.json({ message: 'Password reset email sent successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error sending password reset email' });
+  }
+}
+
+
+async function resetPassword(req, res){
+
+  // Decrypt the payload from the request body
+  const { payload } = req.body;
+  const secretKey = process.env.SECRET_KEY;
+  const decryptedData = CryptoJS.AES.decrypt(payload, secretKey).toString(CryptoJS.enc.Utf8);
+  const parsedData = JSON.parse(decryptedData);
+  const { token, newPassword } = parsedData;
+
+  try {
+    // Find the user with the matching reset token
+    const user = await knex('users').where({ resetToken: token }).first();
+
+    // Check if token is valid and has not expired
+    if (!user || new Date(user.resetTokenExpiry) < new Date()) {
+      return res.status(400).json({ message: 'Invalid or expired token' });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update the user's password and clear the reset token
+    await knex('users')
+      .where({ resetToken: token })
+      .update({
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null,
+      });
+
+    res.status(200).json({ message: 'Password reset successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error resetting password' });
+  }
+}
+
+module.exports = { signup, login, refresh, forgotPassword, resetPassword };

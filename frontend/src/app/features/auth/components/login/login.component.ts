@@ -13,6 +13,8 @@ export class LoginComponent implements OnInit {
 
   loginForm!: FormGroup;
   passwordVisible: boolean = false;
+  showModal = false;
+  email = '';
 
   constructor(private fb: FormBuilder, private authService: AuthService, private toastr: ToastrService, private router: Router) { }
 
@@ -23,6 +25,26 @@ export class LoginComponent implements OnInit {
     });
   }
 
+  openForgotPasswordModal() {
+    this.showModal = true;
+  }
+
+  closeModal() {
+    this.showModal = false;
+  }
+
+  onSubmit() {
+    this.authService.sendPasswordResetEmail(this.email).subscribe({
+      next: () => {
+        this.toastr.success('Password reset email sent successfully');
+        this.closeModal();
+      },
+      error: (err) => {
+        console.error(err);
+        this.toastr.error('Failed to send password reset email');
+      },
+    });
+  }
   togglePasswordVisibility(): void {
     this.passwordVisible = !this.passwordVisible;
   }

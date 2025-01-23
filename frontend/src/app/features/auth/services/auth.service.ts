@@ -81,6 +81,19 @@ export class AuthService {
   }
 
 
+  sendPasswordResetEmail(email: string): Observable<any> {
+    const url = `${this.apiUrl}/forgot-password`; 
+    return this.http.post(url, { email });
+  }
+
+
+  resetPassword(token: string, newPassword: string): Observable<any> {
+    const url = `${this.apiUrl}/reset-password`;
+    return this.http.post(url, { token, newPassword });
+    
+  }
+
+
   logout(): void{
     this.clearTokens();
     this.router.navigateByUrl('/auth/login');
