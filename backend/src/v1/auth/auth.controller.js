@@ -122,7 +122,7 @@ async function refresh(req, res){
     }
 
     // Generate new access token
-    const newAccessToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '1m' });
+    const newAccessToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '10m' });
     console.log("new token: ", newAccessToken);
 
     res.json({ accessToken: newAccessToken, refreshToken: refreshToken });
