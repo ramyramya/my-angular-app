@@ -514,7 +514,7 @@ async function getPresignedUrlForFile(req, res) {
 
     const presignedUrl = await s3.getSignedUrlPromise('putObject', s3Params);
     
-
+    
     res.json({
       success: true,
       presignedUrl,
@@ -543,7 +543,7 @@ async function getUserFiles(req, res){
       return res.status(500).json({ error: 'Error retrieving files from S3' });
     }
 
-    
+  
 
     const files = data.Contents.map((file) => ({
       
