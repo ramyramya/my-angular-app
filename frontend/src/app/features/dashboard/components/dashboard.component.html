@@ -2,9 +2,15 @@
 
 
 <!-- Chat Icon -->
-<div class="chat-icon" (click)="toggleChat()">
-  <i class="bi bi-chat-dots"></i>
+<div class="chat-icon-container" (click)="toggleChat()">
+  <div class="chat-icon">
+    <i class="bi bi-chat-dots"></i>
+    <span *ngIf="unreadMessagesCount > 0" class="unread-count">
+      {{ unreadMessagesCount }}
+    </span>
+  </div>
 </div>
+
 
 <!-- Chat Window -->
 <div class="chat-window" *ngIf="isChatVisible">
@@ -13,8 +19,10 @@
     <button (click)="toggleChat()">Close</button>
   </div>
   <div class="chat-messages" #chatMessages>
-    <div *ngFor="let message of messages">
-      <strong>{{ message.sender }}:</strong> {{ message.text }}
+    <div *ngFor="let message of messages; let i = index">
+      
+    
+      <div><strong>{{ message.sender }}:</strong> {{ message.text }}</div>
     </div>
   </div>
   <div class="chat-input">
@@ -345,19 +353,7 @@
     </div>
 
     
-    <!--<ul class="list-group">
-      <li *ngFor="let file of files" class="list-group-item d-flex align-items-center">
-        <input
-          type="checkbox"
-          class="form-check-input me-2"
-          [checked]="selectedFiles.has(file.key)"
-          (change)="toggleFileSelection(file.key)"
-        />
-        <a [href]="file.url" target="_blank" class="text-truncate" title="{{ file.key }}">
-          {{ file.key }}
-        </a>
-      </li>
-    </ul>-->
+
 
     <!-- File List -->
 <ul class="list-group" style="max-height: 400px; overflow-y: auto;">
@@ -653,44 +649,19 @@
 
 
 <!-- File Preview Modal -->
-<div
-  class="modal fade"
-  id="filePreviewModal"
-  tabindex="-1"
-  aria-labelledby="filePreviewLabel"
-  aria-hidden="true"
->
+<div class="modal fade" id="filePreviewModal" tabindex="-1" aria-labelledby="filePreviewModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="filePreviewLabel">File Preview</h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
+        <h5 class="modal-title" id="filePreviewModalLabel">File Preview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <div *ngIf="previewedFile?.type === 'image'; else otherFilePreview">
-          <img
-            [src]="previewedFile?.url"
-            alt="Preview"
-            class="img-fluid"
-          />
-        </div>
-        <ng-template #otherFilePreview>
-          <iframe
-            *ngIf="safeUrl" 
-            [src]="safeUrl"
-            frameborder="0"
-            style="width: 100%; height: 400px;"
-          ></iframe>
-        </ng-template>
+        <iframe *ngIf="safeUrl" [src]="safeUrl" width="100%" height="500px" frameborder="0"></iframe>
+        <p *ngIf="!safeUrl">File preview is not available.</p>
       </div>
     </div>
   </div>
 </div>
-
 
 

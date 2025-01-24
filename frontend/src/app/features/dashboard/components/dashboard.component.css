@@ -110,28 +110,54 @@
 
 
 /* Chat Icon Styling */
-.chat-icon {
+/* Container to position the chat icon at the bottom-right */
+.chat-icon-container {
   position: fixed;
-  bottom: 20px; /* Distance from the bottom of the screen */
-  right: 20px; /* Distance from the right side of the screen */
-  background-color: #007bff;
+  bottom: 20px; /* Distance from the bottom */
+  right: 20px; /* Distance from the right */
+  z-index: 1000; /* Ensure it stays on top of other content */
+  cursor: pointer;
+}
+
+/* Styling for the chat icon */
+.chat-icon {
+  position: relative;
+  background-color: #007bff; /* Bootstrap primary color */
   color: white;
+  border-radius: 50%;
   width: 60px;
   height: 60px;
-  border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-  z-index: 1000; /* Ensure it stays above other elements */
-  font-size: 24px; /* Icon size */
-  transition: background-color 0.3s ease;
+  font-size: 30px; /* Size of the icon */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  transition: transform 0.2s ease-in-out;
 }
 
 .chat-icon:hover {
-  background-color: #0056b3;
+  transform: scale(1.1); /* Slight zoom effect on hover */
 }
+
+/* Styling for the unread messages count badge */
+.unread-count {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  font-weight: bold;
+  border: 2px solid white; /* Adds a border to separate from the icon */
+}
+
+
 
 /* Chat Window Styling */
 .chat-window {
@@ -214,4 +240,24 @@
 
 .chat-input button:hover {
   background-color: #0056b3;
+}
+
+
+.unread-tag {
+  background-color: #f8d7da; /* Light red background */
+  color: #721c24; /* Dark red text */
+  padding: 5px 10px;
+  margin: 10px 0;
+  text-align: center;
+  font-weight: bold;
+  border-radius: 5px;
+  border: 1px solid #f5c6cb; /* Red border */
+}
+
+
+.emoji-picker {
+  position: absolute;
+  bottom: 50px;
+  left: 10px;
+  z-index: 1000;
 }

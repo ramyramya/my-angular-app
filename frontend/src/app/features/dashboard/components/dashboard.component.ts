@@ -80,10 +80,11 @@ export class DashboardComponent implements OnInit {
   selectedFiles: Set<string> = new Set();
   previewedFile: { key: string; url: string; type: string } | null = null;
 
-  safeUrl : SafeResourceUrl | null = null;  
+  safeUrl: SafeResourceUrl | null = null;
 
   selectedFileName: string = '';
-
+  unreadMessagesCount = 0;
+  
   constructor(
     private dashboardService: DashboardService, private toastr: ToastrService,
     private fb: FormBuilder, // Form builder service for reactive forms
@@ -116,21 +117,26 @@ export class DashboardComponent implements OnInit {
     this.socket = io('http://localhost:3000', {
       transports: ['websocket', 'polling'], // Ensure fallback options are set
     });
-    
+
 
     this.socket.on('connect', () => {
       console.log('Connected to server');
     });
 
-    
+
     this.socket.on('chat message', (msg: { sender: string, text: string }) => {
       console.log('Received message:', msg); // Debug log
       this.messages.push(msg);
+      // Increment unread count if chat is not visible
+      if (!this.isChatVisible) {
+        this.unreadMessagesCount++;
+      }
       setTimeout(() => {
         this.chatMessages.nativeElement.scrollTop = this.chatMessages.nativeElement.scrollHeight;
       }, 100);
+      
     });
-    
+
     this.dashboardService.getUserData().subscribe(data => {
       console.log(`Joining room with userId: ${data.userId}`);
       this.socket.emit('join', data.userId);
@@ -149,19 +155,26 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  
+
   toggleChat(): void {
     this.isChatVisible = !this.isChatVisible;
+
+    // Reset unread messages count if chat is opened
+    if (this.isChatVisible) {
+      
+      this.unreadMessagesCount = 0;
+    }
   }
 
   sendMessage(): void {
     if (this.chatMessage.trim()) {
-      const message = { sender: this.userName, text: this.chatMessage};
+      const message = { sender: this.userName, text: this.chatMessage };
       console.log('Sending message:', message); // Debug log
       this.socket.emit('chat message', message);
       this.chatMessage = '';
     }
   }
-  
 
 
   toggleTable(view: string): void {
@@ -320,11 +333,11 @@ export class DashboardComponent implements OnInit {
       // Proceed with product submission
       const productData = {
         ...this.addProductForm.value,
-        productImage: this.fileUrl || '' 
+        productImage: this.fileUrl || ''
       };
 
       this.submitProduct(productData);
-      
+
     } catch (error) {
       console.error('Error adding product:', error);
     }
@@ -373,7 +386,7 @@ export class DashboardComponent implements OnInit {
         const uploadResponse = await fetch(presignedUrl, {
           method: 'PUT',
           headers: {
-            'Content-Type': fileType, 
+            'Content-Type': fileType,
           },
           body: compressedFile,
         });
@@ -821,7 +834,7 @@ export class DashboardComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       this.selectedFileForUpload = input.files[0];
-      
+
     }
   }
 
@@ -862,7 +875,7 @@ export class DashboardComponent implements OnInit {
     this.dashboardService.getPresignedUrlForFile(fileName, fileType).subscribe({
       next: (response) => {
         const { presignedUrl, fileUrl } = response;
-        console.log("FilePath: ",  fileUrl);
+        console.log("FilePath: ", fileUrl);
 
         // Step 2: Upload the file to S3 using the presigned URL
         fetch(presignedUrl, {
@@ -886,7 +899,7 @@ export class DashboardComponent implements OnInit {
       },
     });
   }
-  getUserFiles(){
+  getUserFiles() {
     // Fetch user files on component initialization
     this.dashboardService.getUserFiles().subscribe({
       next: (response) => {
@@ -898,7 +911,7 @@ export class DashboardComponent implements OnInit {
       },
     });
   }
-  
+
   toggleFileSelection(fileKey: string): void {
     if (this.selectedFiles.has(fileKey)) {
       this.selectedFiles.delete(fileKey);
@@ -943,28 +956,47 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  previewFile(file: { key: string; url: string; type: string }) {
+  
+
+  previewFile(file: { key: string; url: string; type: string }): void {
     // Set the previewed file for reference
     this.previewedFile = file;
+    const fileType = this.getFileType(file.key || file.url);
   
-    // Safely sanitize the file's URL and store it in a separate property
-    this.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(file.url);
+    // Handle `.xlsx` files with Office View
+    if (fileType === 'xlsx') {
+      console.log("It is a excel file");
+      const officeBaseUrl = 'https://view.officeapps.live.com/op/view.aspx?src=';
+      const encodedUrl = encodeURIComponent(file.url);
+  
+      // Safely construct the Office View URL
+      this.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(officeBaseUrl + encodedUrl);
+    } else {
+      // Safely sanitize the file's URL for other file types
+      this.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(file.url);
+    }
   
     // Get the modal element
-  const previewModalElement = document.getElementById('filePreviewModal') as HTMLElement;
+    const previewModalElement = document.getElementById('filePreviewModal') as HTMLElement;
+  
+    // Initialize the modal
+    const previewModal = new bootstrap.Modal(previewModalElement);
+  
+    // Add an event listener for when the modal is hidden
+    previewModalElement.addEventListener('hidden.bs.modal', () => {
+      this.previewedFile = null;
+      this.safeUrl = null;
+    });
+  
+    // Show the modal
+    previewModal.show();
+  }
 
-  // Initialize the modal
-  const previewModal = new bootstrap.Modal(previewModalElement);
-
-  // Add an event listener for when the modal is hidden
-  previewModalElement.addEventListener('hidden.bs.modal', () => {
-    this.previewedFile = null;
-    this.safeUrl = null;
-  });
-
-  // Show the modal
-  previewModal.show();
+  getFileType(fileName: string): string {
+    const extension = fileName.split('.').pop()?.toLowerCase(); // Extract the file extension
+    return extension || ''; // Return the extension or an empty string
   }
   
+
 }
 

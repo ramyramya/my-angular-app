@@ -543,7 +543,10 @@ async function getUserFiles(req, res){
       return res.status(500).json({ error: 'Error retrieving files from S3' });
     }
 
+    
+
     const files = data.Contents.map((file) => ({
+      
       key: file.Key,
       url: `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${file.Key}`,
       type: file.ContentType || 'unknown', // ContentType from S3 object if available

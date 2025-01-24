@@ -53,6 +53,7 @@ io.on('connection', (socket) => {
   socket.on('chat message', (msg) => {
     console.log(`Message from ${msg.sender}: ${msg.text}`);
     io.to("myroom").emit('chat message', msg);
+    //socket.broadcast.emit('chat message', msg);
   });
   
   socket.on('disconnect', () => {

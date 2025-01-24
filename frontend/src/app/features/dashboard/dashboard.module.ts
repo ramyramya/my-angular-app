@@ -6,6 +6,7 @@ import { NavbarComponent } from './components/navbar/navbar.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 
+
 @NgModule({
   declarations: [
     DashboardComponent,
@@ -15,7 +16,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     CommonModule,
     DashboardRoutingModule,
     ReactiveFormsModule,
-    FormsModule
+    FormsModule,
   ]
 })
 export class DashboardModule { }
