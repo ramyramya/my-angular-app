@@ -124,27 +124,69 @@ export class DashboardComponent implements OnInit {
     });
 
 
-    this.socket.on('chat message', (msg: { sender: string, text: string }) => {
-      console.log('Received message:', msg); // Debug log
-      this.messages.push(msg);
-      // Increment unread count if chat is not visible
-      if (!this.isChatVisible) {
-        this.unreadMessagesCount++;
-      }
-      setTimeout(() => {
-        this.chatMessages.nativeElement.scrollTop = this.chatMessages.nativeElement.scrollHeight;
-      }, 100);
+    // this.socket.on('chat message', (msg: { sender: string, text: string }) => {
+    //   console.log('Received message:', msg); // Debug log
       
-    });
+    // this.messages.push(msg);
+    //   // Increment unread count if chat is not visible
+    //   if (!this.isChatVisible) {
+    //     this.unreadMessagesCount++;
+    //   }
+    //   setTimeout(() => {
+    //     this.chatMessages.nativeElement.scrollTop = this.chatMessages.nativeElement.scrollHeight;
+    //   }, 100);
+      
+    // });
+
+    // this.dashboardService.getUserData().subscribe(data => {
+    //   console.log(`Joining room with userId: ${data.userId}`);
+    //   this.socket.emit('join', data.userId);
+    // });
+
+    
+    
 
     this.dashboardService.getUserData().subscribe(data => {
-      console.log(`Joining room with userId: ${data.userId}`);
-      this.socket.emit('join', data.userId);
+      this.userId = data.userId;
+      console.log(`🚀 Joining room: ${this.userId}`);
+      this.socket.emit('join', this.userId);
+    
+      // Verify connection with the server
+      this.socket.on('room-joined', (roomId: number) => {
+        console.log(`✅ Successfully joined room: ${roomId}`);
+      });
     });
+    
 
     this.dashboardService.getUsers().subscribe(users => {
       this.users = users;
     });
+
+    this.socket.on('chat message', (msg: { senderId: number, sender: string, text: string, receiverId: number }) => {
+      console.log('📩 New message received:', msg);
+      
+      // Check if the message is for the current user or sender
+      if (Number(msg.receiverId) === this.userId) {
+        console.log('✅ Message belongs to this user:', this.userId);
+    
+        // Push the message to the chat
+        this.messages.push(msg);
+    
+        // Increment unread messages count if chat is not visible
+        if (!this.isChatVisible) {
+          this.unreadMessagesCount++;
+        }
+    
+        // Scroll to the latest message
+        setTimeout(() => {
+          this.chatMessages.nativeElement.scrollTop = this.chatMessages.nativeElement.scrollHeight;
+        }, 100);
+      } else {
+        console.log('❌ Message was not for this user.');
+      }
+    });
+    
+    
   }
 
   ngDoCheck(): void {
@@ -167,15 +209,37 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  // sendMessage(): void {
+  //   if (this.chatMessage.trim()) {
+  //     const message = { sender: this.userName, text: this.chatMessage };
+  //     console.log('Sending message:', message); // Debug log
+  //     this.socket.emit('chat message', message);
+  //     this.chatMessage = '';
+  //   }
+  // }
+
   sendMessage(): void {
-    if (this.chatMessage.trim()) {
-      const message = { sender: this.userName, text: this.chatMessage };
+    if (this.chatMessage.trim() && this.selectedUserId) {
+      const message = { senderId: this.userId, sender: this.userName, text: this.chatMessage, receiverId: this.selectedUserId };
       console.log('Sending message:', message); // Debug log
+      // Immediately add the message to the sender's chat
+    this.messages.push({
+      sender: this.userName, 
+      text: this.chatMessage
+    });
+
       this.socket.emit('chat message', message);
       this.chatMessage = '';
+      
     }
   }
 
+  loadMessages(): void {
+    console.log("UserId: ", this.userId);
+    this.dashboardService.getMessages(this.userId).subscribe(messages => {
+      this.messages = messages;
+    });
+  }
 
   toggleTable(view: string): void {
     if (view === 'cart') {

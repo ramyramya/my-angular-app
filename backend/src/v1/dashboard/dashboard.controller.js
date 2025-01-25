@@ -567,6 +567,17 @@ async function getUsers(req, res) {
 }
 
 
+async function getMessages(req, res) {
+  try {
+    const userId = req.params.userId;
+    const messages = await dashboardService.fetchMessages(userId);
+    res.json(messages);
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+}
+
 module.exports = {
   getUserInfo,
   getPresignedUrl,
@@ -585,7 +596,8 @@ module.exports = {
   updateProducts,
   getPresignedUrlForFile,
   getUserFiles,
-  getUsers
+  getUsers,
+  getMessages
 };
 
 

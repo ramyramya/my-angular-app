@@ -849,6 +849,22 @@ async function fetchAllUsers() {
   }
 }
 
+async function fetchMessages(userId) {
+  try {
+    const messages = await knex('messages')
+      .select('users.username as sender', 'messages.message as text')
+      .join('users', 'messages.sender_id', 'users.id')
+      .where('messages.receiver_id', userId)
+      .orWhere('messages.sender_id', userId)
+      .orderBy('messages.created_at', 'asc');
+
+    return messages;
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   fetchUserInfo,
   getVendorCount,
@@ -864,4 +880,5 @@ module.exports = {
   deleteCartItem,
   updateProductDetails,
   fetchAllUsers,
+  fetchMessages,
 };

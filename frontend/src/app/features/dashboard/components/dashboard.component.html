@@ -13,7 +13,7 @@
 
 
 <!-- Chat Window -->
-<div class="chat-window" *ngIf="isChatVisible">
+<!--<div class="chat-window" *ngIf="isChatVisible">
   <div class="chat-header">
     <h5>Chat</h5>
     <button (click)="toggleChat()">Close</button>
@@ -30,8 +30,29 @@
     <input [(ngModel)]="chatMessage" (keyup.enter)="sendMessage()" placeholder="Type a message..." />
     <button (click)="sendMessage()">Send</button>
   </div>
-</div>
+</div>-->
 
+
+
+<!-- Chat Window -->
+<div class="chat-window" *ngIf="isChatVisible">
+  <div class="chat-header">
+    <h5>Chat</h5>
+    <button (click)="toggleChat()">Close</button>
+  </div>
+  <div class="chat-messages" #chatMessages>
+    <div *ngFor="let message of messages">
+      <strong>{{ message.sender }}:</strong> {{ message.text }}
+    </div>
+  </div>
+  <div class="chat-input">
+    <select [(ngModel)]="selectedUserId">
+      <option *ngFor="let user of users" [value]="user.id">{{ user.username }}</option>
+    </select>
+    <input [(ngModel)]="chatMessage" (keyup.enter)="sendMessage()" placeholder="Type a message..." />
+    <button (click)="sendMessage()">Send</button>
+  </div>
+</div>
 
 <div class="container-fluid  mt-4">
   <div class="row">

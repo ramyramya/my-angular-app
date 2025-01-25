@@ -152,6 +152,11 @@ getUserFiles(): Observable<{ files: { key: string; url: string; type: string }[]
 getUsers(): Observable<{ id: number, username: string }[]> {
   return this.http.get<{ id: number, username: string }[]>(`${this.apiUrl}/users`);
 }
+
+getMessages(userId: number): Observable<{ sender: string, text: string }[]> {
+  console.log("UserId: ", userId);
+  return this.http.get<{ sender: string, text: string }[]>(`${this.apiUrl}/messages/${userId}`);
+}
   
 }
 
