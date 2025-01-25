@@ -175,6 +175,7 @@ export class DashboardComponent implements OnInit {
         // Increment unread messages count if chat is not visible
         if (!this.isChatVisible) {
           this.unreadMessagesCount++;
+          this.updateTabTitle();
         }
     
         // Scroll to the latest message
@@ -204,8 +205,8 @@ export class DashboardComponent implements OnInit {
 
     // Reset unread messages count if chat is opened
     if (this.isChatVisible) {
-      
       this.unreadMessagesCount = 0;
+      this.updateTabTitle();
     }
   }
 
@@ -239,6 +240,14 @@ export class DashboardComponent implements OnInit {
     this.dashboardService.getMessages(this.userId).subscribe(messages => {
       this.messages = messages;
     });
+  }
+
+  updateTabTitle(): void {
+    if (this.unreadMessagesCount > 0) {
+      document.title = `(${this.unreadMessagesCount}) New Messages`;
+    } else {
+      document.title = 'My Angular App';
+    }
   }
 
   toggleTable(view: string): void {
