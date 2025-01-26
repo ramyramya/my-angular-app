@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
 import jwt_decode from 'jwt-decode';
+import { AuthService } from '../../features/auth/services/auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class NoAuthGuard implements CanActivate {
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthService) {}
 
   canActivate(): boolean {
     const token = sessionStorage.getItem('access_token');
@@ -18,7 +19,8 @@ export class NoAuthGuard implements CanActivate {
     }
 
     // Token is missing or expired, allow access
-    return true;  // Allow access to the current route (e.g., login/signup)
+    return true; // Allow access to the current route
+    
   }
 
   private isTokenExpired(token: string): boolean {

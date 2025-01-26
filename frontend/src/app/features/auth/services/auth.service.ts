@@ -28,6 +28,8 @@ import { Router } from '@angular/router';
   providedIn: 'root'
 })
 export class AuthService {
+  
+  userId!:number;
   private apiUrl = `${environment.apiUrl}/auth`;  // Update with your base API URL
 
   constructor(private http: HttpClient, private router: Router) {}
@@ -41,6 +43,10 @@ export class AuthService {
   }
 
 
+  setUser(userId:number){
+    this.userId = userId;
+  }
+
   isAuthenticated(): boolean {
     const token = sessionStorage.getItem('access_token');
     if (!token) return false;
@@ -53,26 +59,23 @@ export class AuthService {
   }
 
   // Store tokens in localStorage or sessionStorage
-  storeTokens(accessToken: string, refreshToken: string): void {
+  storeTokens(accessToken: string): void {
     sessionStorage.setItem('access_token', accessToken);
-    sessionStorage.setItem('refresh_token', refreshToken);
+    //sessionStorage.setItem('refresh_token', refreshToken);
   }
 
   // Clear tokens when user logs out
   clearTokens(): void {
     sessionStorage.removeItem('access_token');
-    sessionStorage.removeItem('refresh_token');
+    //sessionStorage.removeItem('refresh_token');
   }
 
   // Refresh the access token using the refresh token
   refreshAccessToken(): Observable<any> {
-    const refreshToken = sessionStorage.getItem('refresh_token');
+    const user_id = sessionStorage.getItem('user_id');
     
-    if (!refreshToken) {
-      throw new Error('No refresh token available');
-    }
 
-    return this.http.post<any>(`${this.apiUrl}/refresh`, { refreshToken });
+    return this.http.post<any>(`${this.apiUrl}/refresh/${user_id}`, {});
   }
 
   // Retrieve the access token (e.g., to include in HTTP request headers)
@@ -96,6 +99,8 @@ export class AuthService {
 
   logout(): void{
     this.clearTokens();
+    sessionStorage.removeItem('user_id');
+    this.userId = 0;
     this.router.navigateByUrl('/auth/login');
   }
 }

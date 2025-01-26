@@ -77,14 +77,21 @@ async function login(req, res) {
     }
 
     // Generate access token and refresh token
-    const accessToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '10m' });
-    const refreshToken = jwt.sign({ userId: user.id, userNmae: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const accessToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '2m' });
+    const refreshToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '5m' });
 
+
+    // Save the refresh token in the database
+    await knex('users')
+      .where('id', user.id)
+      .update({ refreshToken });
     // Respond with the tokens
     res.json({
       success: true,
+
+      userId: user.id,
       accessToken,
-      refreshToken
+      //refreshToken
     });
   } catch (err) {
     console.log(err);
@@ -93,47 +100,94 @@ async function login(req, res) {
 }
 
 
-async function refresh(req, res){
-  // Decrypt the payload from the request body
-  console.log("Entered refresh Function");
-  const { payload } = req.body;
-  const secretKey = process.env.SECRET_KEY;
-  const decryptedData = CryptoJS.AES.decrypt(payload, secretKey).toString(CryptoJS.enc.Utf8);
-  const refreshData = JSON.parse(decryptedData);
-  console.log("Refresh Data: ", refreshData);
-  const { refreshToken } = refreshData;
+// async function refresh(req, res){
+//   // Decrypt the payload from the request body
+//   console.log("Entered refresh Function");
+//   const { payload } = req.body;
+//   const secretKey = process.env.SECRET_KEY;
+//   const decryptedData = CryptoJS.AES.decrypt(payload, secretKey).toString(CryptoJS.enc.Utf8);
+//   const refreshData = JSON.parse(decryptedData);
+//   console.log("Refresh Data: ", refreshData);
+//   const { refreshToken } = refreshData;
 
-  if (!refreshToken) {
-    return res.status(400).json({ message: 'Refresh token required' });
+//   if (!refreshToken) {
+//     return res.status(400).json({ message: 'Refresh token required' });
+//   }
+
+//   try {
+//     // Verify refresh token
+//     const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    
+//     // Find the user (ensure the refresh token matches the user)
+//     const user = await knex('users')
+//                   .where('id', decoded.userId)
+//                   .first();
+//     console.log("User found in refresh token process");
+//     //console.log("User: ", user);
+//     if (!user) {
+//       return res.status(401).json({ message: 'User not found' ,  isRefreshValid: false});
+//     }
+
+//     // Generate new access token
+//     const newAccessToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '10m' });
+//     console.log("new token: ", newAccessToken);
+
+//     res.json({ accessToken: newAccessToken, refreshToken: refreshToken });
+//   } catch (error) {
+//     if (error.name === 'TokenExpiredError') {
+//         return res.status(401).json({ error: 'Refresh token expired' , isRefreshValid: false});
+//     }
+//     return res.status(401).json({ error: 'Invalid refresh token' ,  isRefreshValid: false});
+// }
+// };
+
+async function refresh(req, res) {
+  console.log("Entered refresh Function");
+
+  // Get the userId from the request parameters (or from the body if passed differently)
+  const { userId } = req.params;
+  console.log("User ID: ", userId);
+
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID required' });
   }
 
   try {
-    // Verify refresh token
-    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
-    
-    // Find the user (ensure the refresh token matches the user)
+    // Query the database to get the user's stored refresh token
     const user = await knex('users')
-                  .where('id', decoded.userId)
-                  .first();
-    console.log("User found in refresh token process");
-    //console.log("User: ", user);
+      .where('id', userId)
+      .first();
+
     if (!user) {
-      return res.status(401).json({ message: 'User not found' ,  isRefreshValid: false});
+      return res.status(404).json({ message: 'User not found', isRefreshValid: false });
     }
+
+    const refreshToken = user.refreshToken;
+
+    if (!refreshToken) {
+      return res.status(400).json({ message: 'Refresh token not found for user', isRefreshValid: false });
+    }
+
+    // Verify the refresh token
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    console.log("Refresh token decoded: ", decoded);
 
     // Generate new access token
-    const newAccessToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '10m' });
-    console.log("new token: ", newAccessToken);
+    const newAccessToken = jwt.sign({ userId: decoded.userId, userName: decoded.userName }, process.env.JWT_SECRET, { expiresIn: '2m' });
+    console.log("New access token: ", newAccessToken);
 
-    res.json({ accessToken: newAccessToken, refreshToken: refreshToken });
+    // Send the new access token and the refresh token
+    res.json({
+      success: true,
+      accessToken: newAccessToken,
+    });
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
-        return res.status(401).json({ error: 'Refresh token expired' , isRefreshValid: false});
+      return res.status(401).json({ error: 'Refresh token expired', isRefreshValid: false });
     }
-    return res.status(401).json({ error: 'Invalid refresh token' ,  isRefreshValid: false});
+    return res.status(401).json({ error: 'Invalid refresh token', isRefreshValid: false });
+  }
 }
-};
-
 
 async function forgotPassword(req, res){
 

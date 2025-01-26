@@ -134,7 +134,7 @@ export class EncryptionInterceptor implements HttpInterceptor {
                 this.isRefreshing = false;
 
                 // Set new access token
-                this.authService.storeTokens(tokens.accessToken, tokens.refreshToken);
+                this.authService.storeTokens(tokens.accessToken);
 
                 // Retry the failed request with the new access token
                 const clonedRequest = req.clone({

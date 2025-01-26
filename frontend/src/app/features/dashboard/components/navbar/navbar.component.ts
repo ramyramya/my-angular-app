@@ -3,6 +3,7 @@ import { DashboardService } from '../../services/dashboard.service';
 import { Router } from '@angular/router';
 import * as bootstrap from 'bootstrap';  // Import Bootstrap JS
 import imageCompression from 'browser-image-compression';
+import { AuthService } from '../../../auth/services/auth.service';
 
 @Component({
   selector: 'app-navbar',
@@ -18,7 +19,8 @@ export class NavbarComponent implements OnInit {
 
   constructor(
     private dashboardService: DashboardService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
@@ -166,6 +168,7 @@ export class NavbarComponent implements OnInit {
 
   logout(): void {
     sessionStorage.clear();
+    this.authService.logout();
     this.router.navigateByUrl('/auth/login');
   }
 

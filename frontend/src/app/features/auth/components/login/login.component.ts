@@ -59,8 +59,11 @@ export class LoginComponent implements OnInit {
           next: response => {
             if (response.success) {
               sessionStorage.setItem('access_token', response.accessToken);
-              sessionStorage.setItem('refresh_token', response.refreshToken);
+              //sessionStorage.setItem('refresh_token', response.refreshToken);
+              sessionStorage.setItem('user_id', response.userId.toString());
+              this.authService.setUser(response.userId);
               console.log('Logged in successfully!');
+              
               this.toastr.success('Logged in successfully!', 'Success');
               this.loginForm.reset();
               this.router.navigateByUrl('/dashboard');

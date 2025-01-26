@@ -9,7 +9,7 @@ router.post('/signup',signup);
 
 router.post('/login', login);
 
-router.post('/refresh', refresh);
+router.post('/refresh/:userId', refresh);
 
 router.post('/forgot-password', forgotPassword);
 
