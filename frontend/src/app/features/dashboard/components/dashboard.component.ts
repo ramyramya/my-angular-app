@@ -23,7 +23,7 @@ export class DashboardComponent implements OnInit {
   socket: any;
   isChatVisible = false;
   chatMessage = '';
-  messages: { sender: string, text: string }[] = [];
+  messages: { senderId: number, sender: string, text: string, receiverId: number }[] = [];
   users: { id: number, username: string }[] = [];
   selectedUserId !: number;
 
@@ -123,29 +123,6 @@ export class DashboardComponent implements OnInit {
       console.log('Connected to server');
     });
 
-
-    // this.socket.on('chat message', (msg: { sender: string, text: string }) => {
-    //   console.log('Received message:', msg); // Debug log
-      
-    // this.messages.push(msg);
-    //   // Increment unread count if chat is not visible
-    //   if (!this.isChatVisible) {
-    //     this.unreadMessagesCount++;
-    //   }
-    //   setTimeout(() => {
-    //     this.chatMessages.nativeElement.scrollTop = this.chatMessages.nativeElement.scrollHeight;
-    //   }, 100);
-      
-    // });
-
-    // this.dashboardService.getUserData().subscribe(data => {
-    //   console.log(`Joining room with userId: ${data.userId}`);
-    //   this.socket.emit('join', data.userId);
-    // });
-
-    
-    
-
     this.dashboardService.getUserData().subscribe(data => {
       this.userId = data.userId;
       console.log(`🚀 Joining room: ${this.userId}`);
@@ -155,17 +132,24 @@ export class DashboardComponent implements OnInit {
       this.socket.on('room-joined', (roomId: number) => {
         console.log(`✅ Successfully joined room: ${roomId}`);
       });
+      
     });
     
 
-    this.dashboardService.getUsers().subscribe(users => {
-      this.users = users;
+    // Fetch active users initially
+    this.dashboardService.getActiveUsers().subscribe((users) => {
+      this.users = users.filter((user) => user.id !== this.userId);
+    });
+
+    // Listen for real-time updates
+    this.dashboardService.listenForActiveUsers((users) => {
+      this.users = users.filter((user) => user.id !== this.userId);
     });
 
     this.socket.on('chat message', (msg: { senderId: number, sender: string, text: string, receiverId: number }) => {
       console.log('📩 New message received:', msg);
       
-      // Check if the message is for the current user or sender
+      // Check if the message is for the current user
       if (Number(msg.receiverId) === this.userId) {
         console.log('✅ Message belongs to this user:', this.userId);
     
@@ -210,14 +194,7 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  // sendMessage(): void {
-  //   if (this.chatMessage.trim()) {
-  //     const message = { sender: this.userName, text: this.chatMessage };
-  //     console.log('Sending message:', message); // Debug log
-  //     this.socket.emit('chat message', message);
-  //     this.chatMessage = '';
-  //   }
-  // }
+  
 
   sendMessage(): void {
     if (this.chatMessage.trim() && this.selectedUserId) {
@@ -225,8 +202,11 @@ export class DashboardComponent implements OnInit {
       console.log('Sending message:', message); // Debug log
       // Immediately add the message to the sender's chat
     this.messages.push({
-      sender: this.userName, 
-      text: this.chatMessage
+
+      senderId: this.userId,
+      sender: this.userName,
+      text: this.chatMessage,
+      receiverId: this.selectedUserId,
     });
 
       this.socket.emit('chat message', message);
@@ -235,13 +215,7 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  loadMessages(): void {
-    console.log("UserId: ", this.userId);
-    this.dashboardService.getMessages(this.userId).subscribe(messages => {
-      this.messages = messages;
-    });
-  }
-
+  
   updateTabTitle(): void {
     if (this.unreadMessagesCount > 0) {
       document.title = `(${this.unreadMessagesCount}) New Messages`;

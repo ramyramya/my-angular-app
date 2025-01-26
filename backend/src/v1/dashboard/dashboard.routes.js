@@ -36,7 +36,8 @@ router.post('/update-products', authMiddleware, dashboardController.updateProduc
 router.post('/get-presigned-url-for-file', authMiddleware, dashboardController.getPresignedUrlForFile);
 router.get('/get-user-files', authMiddleware, dashboardController.getUserFiles);
 router.get('/users', authMiddleware, dashboardController.getUsers);
-router.get('/messages/:userId', authMiddleware, dashboardController.getMessages);
+//router.get('/messages/:userId', authMiddleware, dashboardController.getMessages);
+router.get("/active-users", dashboardController.getActiveUsers);
 
 module.exports = router;
 

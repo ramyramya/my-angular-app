@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Product } from '../interfaces/product.interface';
 import { jsPDF } from 'jspdf';
+import { io } from "socket.io-client";
 
 
 @Injectable({
@@ -11,6 +12,8 @@ import { jsPDF } from 'jspdf';
 })
 export class DashboardService {
   private apiUrl = `${environment.apiUrl}/dashboard`;
+  private apiSocketUrl = "http://localhost:3000";
+  private socket = io(this.apiSocketUrl);
 
   constructor(private http: HttpClient) { }
 
@@ -153,9 +156,19 @@ getUsers(): Observable<{ id: number, username: string }[]> {
   return this.http.get<{ id: number, username: string }[]>(`${this.apiUrl}/users`);
 }
 
-getMessages(userId: number): Observable<{ sender: string, text: string }[]> {
-  console.log("UserId: ", userId);
-  return this.http.get<{ sender: string, text: string }[]>(`${this.apiUrl}/messages/${userId}`);
+// getMessages(userId: number): Observable<{ sender: string, text: string }[]> {
+//   console.log("UserId: ", userId);
+//   return this.http.get<{ sender: string, text: string }[]>(`${this.apiUrl}/messages/${userId}`);
+// }
+
+getActiveUsers(): Observable<any[]> {
+  return this.http.get<any[]>(`${this.apiUrl}/active-users`);
+}
+
+listenForActiveUsers(callback: (users: any[]) => void) {
+  this.socket.on("activeUsers", (users) => {
+    callback(users);
+  });
 }
   
 }

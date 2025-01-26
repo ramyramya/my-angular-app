@@ -202,6 +202,9 @@
   overflow-y: auto;
   padding: 10px;
   background-color: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 /* Chat Input */
@@ -212,6 +215,9 @@
   align-items: center;
   background-color: #fff;
   border-top: 1px solid #ddd;
+  position: sticky;
+  bottom: 0; /* Keep it at the bottom */
+  background-color: #fff;
 }
 
 .chat-input select {
@@ -242,22 +248,20 @@
   background-color: #0056b3;
 }
 
-
-.unread-tag {
-  background-color: #f8d7da; /* Light red background */
-  color: #721c24; /* Dark red text */
-  padding: 5px 10px;
-  margin: 10px 0;
-  text-align: center;
-  font-weight: bold;
-  border-radius: 5px;
-  border: 1px solid #f5c6cb; /* Red border */
+/* Message Styles */
+.message-left {
+  align-self: flex-start;
+  background-color: #f1f1f1;
+  padding: 8px 12px;
+  border-radius: 10px;
+  max-width: 70%;
 }
 
-
-.emoji-picker {
-  position: absolute;
-  bottom: 50px;
-  left: 10px;
-  z-index: 1000;
+.message-right {
+  align-self: flex-end;
+  background-color: #007bff;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 10px;
+  max-width: 70%;
 }

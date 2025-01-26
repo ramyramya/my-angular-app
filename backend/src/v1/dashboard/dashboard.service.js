@@ -865,6 +865,24 @@ async function fetchMessages(userId) {
   }
 }
 
+// async function saveMessageToDatabase(senderId, receiverId, text, isRead){
+//   knex('messages').insert({
+//     sender_id: senderId,
+//     receiver_id: receiverId,
+//     message: text,
+//     is_read: isRead,
+//   }).then(() => {
+//     console.log('Message saved to database.');
+//   }).catch(err => {
+//     console.error('Error saving message to database:', err);
+//   });
+// };
+
+
+async function getActiveUsers() {
+  return knex("users").where("is_active", true).select("id", "username", "thumbnail");
+}
+
 module.exports = {
   fetchUserInfo,
   getVendorCount,
@@ -881,4 +899,6 @@ module.exports = {
   updateProductDetails,
   fetchAllUsers,
   fetchMessages,
+  getActiveUsers,
+  //saveMessageToDatabase,
 };

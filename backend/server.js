@@ -11,6 +11,8 @@ const { Server } = require('socket.io');
 const knex = require('./src/mysql/knex');
 const userSockets = new Map(); // Store user ID to socket mapping
 
+//const dashboardService = require('./src/v1/dashboard/dashboard.service');
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -116,7 +118,7 @@ io.use((socket, next) => {
 io.on('connection', (socket) => {
     console.log(`🟢 New user connected: ${socket.id}`);
 
-    socket.on('join', (userId) => {
+    socket.on('join', async(userId) => {
       // Ensure userId is a string and remove extra spaces
       const userIdString = String(userId).trim();
   
@@ -125,6 +127,11 @@ io.on('connection', (socket) => {
   
       console.log(`👥 User ${userIdString} joined room ${userIdString}`);
       console.log(`📌 Updated userSockets:`, userSockets);
+      // Mark user as active in the database
+    await knex("users").where("id", Number(userIdString)).update({ is_active: true });
+
+    // Broadcast updated active users list
+    emitActiveUsers();
   });
   
   socket.on('chat message', (msg) => {
@@ -144,6 +151,11 @@ io.on('connection', (socket) => {
               console.log(`✅ Message sent to User ${receiverIdString}`);
           } else {
               console.log(`⚠️ User ${receiverIdString} socket does not exist in active connections.`);
+              
+                // // If receiver is offline, save the message in the database with "unread" status
+                // this.dashboardService.saveMessageToDatabase(msg.senderId, msg.receiverId, msg.text, false); // "false" indicates unread
+                // console.log(`⚠️ User ${msg.receiverId} is offline. Message saved in the database.`);
+              
           }
       } else {
           console.log(`⚠️ Socket ID for User ${receiverIdString} is not stored in the map.`);
@@ -152,19 +164,41 @@ io.on('connection', (socket) => {
   
 
     // Handle disconnection
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async() => {
         console.log(`🔴 User disconnected: ${socket.id}`);
-
+        let disconnectedUserId = null;
         // Remove the user from the userSockets map when they disconnect
         for (const [userId, socketId] of userSockets.entries()) {
             if (socketId === socket.id) {
+              disconnectedUserId = userId;
                 userSockets.delete(userId);
                 console.log(`❌ Removed User ${userId} from active connections.`);
                 break;
             }
         }
+        if (disconnectedUserId) {
+          await knex("users").where("id", Number(disconnectedUserId)).update({ is_active: false });
+          console.log(`❌ User ${disconnectedUserId} marked as inactive.`);
+    
+          // Broadcast updated active users list
+          emitActiveUsers();
+        }
+    
     });
+
+
+    function emitActiveUsers() {
+      knex("users")
+        .where("is_active", true)
+        .select("id", "username", "thumbnail")
+        .then((users) => {
+          io.emit("activeUsers", users);
+        });
+    }
 });
+
+
+
 
 
 

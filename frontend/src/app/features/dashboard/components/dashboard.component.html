@@ -41,7 +41,8 @@
     <button (click)="toggleChat()">Close</button>
   </div>
   <div class="chat-messages" #chatMessages>
-    <div *ngFor="let message of messages">
+    <div *ngFor="let message of messages"
+    [ngClass]="{'message-right': message.senderId === userId, 'message-left': message.senderId !== userId}">
       <strong>{{ message.sender }}:</strong> {{ message.text }}
     </div>
   </div>
