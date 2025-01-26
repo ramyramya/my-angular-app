@@ -77,8 +77,8 @@ async function login(req, res) {
     }
 
     // Generate access token and refresh token
-    const accessToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '2m' });
-    const refreshToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '5m' });
+    const accessToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '10m' });
+    const refreshToken = jwt.sign({ userId: user.id, userName: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
 
     // Save the refresh token in the database
@@ -173,7 +173,7 @@ async function refresh(req, res) {
     console.log("Refresh token decoded: ", decoded);
 
     // Generate new access token
-    const newAccessToken = jwt.sign({ userId: decoded.userId, userName: decoded.userName }, process.env.JWT_SECRET, { expiresIn: '2m' });
+    const newAccessToken = jwt.sign({ userId: decoded.userId, userName: decoded.userName }, process.env.JWT_SECRET, { expiresIn: '10m' });
     console.log("New access token: ", newAccessToken);
 
     // Send the new access token and the refresh token
