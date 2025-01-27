@@ -15,13 +15,23 @@ const userSockets = new Map(); // Store user ID to socket mapping
 
 const app = express();
 const server = http.createServer(app);
+// const io = new Server(server, {
+//   cors: {
+//     origin: "*", // Ensure this is correct, especially if your frontend is hosted on a different port/domain
+//     methods: ["GET", "POST"],
+//     allowedHeaders: ["Content-Type"],
+//   },
+ 
+// });
 const io = new Server(server, {
   cors: {
-    origin: "*", // Adjust this to match your frontend URL
-    methods: ["GET", "POST"]
-  }
+    origin: "http://localhost:4200", 
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Authorization"],
+    credentials: true
+  },
+  transports: ['websocket', 'polling'] 
 });
-
 // Enable CORS
 app.use(cors());
 
@@ -206,3 +216,8 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+
+
+
+

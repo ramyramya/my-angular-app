@@ -12,8 +12,8 @@ import { io } from "socket.io-client";
 })
 export class DashboardService {
   private apiUrl = `${environment.apiUrl}/dashboard`;
-  private apiSocketUrl = "http://localhost:3000";
-  private socket = io(this.apiSocketUrl);
+  // private apiSocketUrl = "http://localhost:3000";
+  // private socket = io(this.apiSocketUrl);
 
   constructor(private http: HttpClient) { }
 
@@ -165,11 +165,11 @@ getActiveUsers(): Observable<any[]> {
   return this.http.get<any[]>(`${this.apiUrl}/active-users`);
 }
 
-listenForActiveUsers(callback: (users: any[]) => void) {
-  this.socket.on("activeUsers", (users) => {
-    callback(users);
-  });
-}
+// listenForActiveUsers(callback: (users: any[]) => void) {
+//   this.socket.on("activeUsers", (users) => {
+//     callback(users);
+//   });
+// }
   
 }
 

@@ -115,7 +115,7 @@ export class DashboardComponent implements OnInit {
     this.getUserFiles();
 
     this.socket = io('http://localhost:3000', {
-      transports: ['websocket', 'polling'], // Ensure fallback options are set
+      transports: ['websocket', 'polling'], 
     });
 
 
@@ -141,8 +141,7 @@ export class DashboardComponent implements OnInit {
       this.users = users.filter((user) => user.id !== this.userId);
     });
 
-    // Listen for real-time updates
-    this.dashboardService.listenForActiveUsers((users) => {
+    this.socket.on("activeUsers", (users: any[]) => {
       this.users = users.filter((user) => user.id !== this.userId);
     });
 
