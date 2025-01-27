@@ -10,6 +10,7 @@ import * as JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { io } from 'socket.io-client';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 
 
@@ -67,6 +68,7 @@ export class DashboardComponent implements OnInit {
 
   fileData: any[] = [];
   searchTerm: string = ''; // Search term
+  searchTermSubject: Subject<string> = new Subject<string>();
   filteredProducts: Product[] = []; // Filtered products list
   // Flags for the filter options
   isFilterDropdownVisible = false;
@@ -103,6 +105,12 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.searchTermSubject.pipe(
+      debounceTime(300), // Wait for 300ms pause in events
+      distinctUntilChanged() // Only emit if value is different from previous value
+    ).subscribe(searchTerm => {
+      this.fetchPage(1);
+    });
     this.dashboardService.getUserData().subscribe(data => {
       this.userId = data.userId;
       this.userName = data.username;
@@ -231,6 +239,12 @@ export class DashboardComponent implements OnInit {
       this.flag = 1;
     }
   }
+
+
+  onSearchTermChange(searchTerm: string): void {
+    this.searchTermSubject.next(searchTerm);
+  }
+
 
   getVendorCount(): void {
     this.dashboardService.getVendorCount().subscribe({

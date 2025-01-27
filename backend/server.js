@@ -10,6 +10,8 @@ const http = require('http');
 const { Server } = require('socket.io');
 const knex = require('./src/mysql/knex');
 const userSockets = new Map(); // Store user ID to socket mapping
+const rateLimit = require('express-rate-limit');
+
 
 //const dashboardService = require('./src/v1/dashboard/dashboard.service');
 
@@ -32,6 +34,14 @@ const io = new Server(server, {
   },
   transports: ['websocket', 'polling'] 
 });
+
+// Define rate limit: 200 requests per 15 minutes per IP
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200,
+  message: { error: "Too many requests, please try again later." },
+  headers: true, 
+});
 // Enable CORS
 app.use(cors());
 
@@ -45,6 +55,7 @@ app.use((req, res, next) => {
   }
   encryptionMiddleware(req, res, next);
 });
+app.use(apiLimiter);
 
 app.use('/api/v1', routes);
 
