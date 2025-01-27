@@ -37,7 +37,7 @@
 
 /* Style for the upload area */
 .upload-area {
-  border: 2px dashed #007bff;
+  border: 2px dashed blueviolet;
   background-color: #f8f9fa;
   padding: 20px;
   cursor: pointer;
@@ -57,7 +57,7 @@
 }
 
 .upload-area .upload-message i {
-  color: #007bff;
+  color: blueviolet;
 }
 
 .upload-area .upload-message p {
@@ -67,7 +67,7 @@
 
 .upload-area .dragover {
   background-color: #e2e6ea;
-  border-color: #0056b3;
+  border-color: blueviolet;
 }
 
 /* Style for the selected file name */
@@ -84,6 +84,19 @@
 }
 
 .modal-footer button:not(:disabled):hover {
-  background-color: #0056b3;
+  background-color: blueviolet;
   color: white;
+}
+
+
+/* Add this to your custom styles or global styles file */
+.btn-blue-violet {
+  background-color: #8A2BE2;
+  border-color: #8A2BE2;
+  color: white;
+}
+
+.btn-blue-violet:hover {
+  background-color: #7A1DCE;
+  border-color: #7A1DCE;
 }

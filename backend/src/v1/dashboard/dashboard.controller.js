@@ -363,17 +363,40 @@ async function moveToCart(req, res) {
 // };
 
 
+// async function getCartItems(req, res) {
+//   try {
+//     const { page = 1, limit = 5 } = req.query;
+//     const userId = req.user.userId;
+//     const data = await dashboardService.getCartItems(userId, Number(page), Number(limit));
+//     res.json({ success: true, ...data });
+//   } catch (error) {
+//     console.error('Error fetching cartProducts:', error);
+//     res.status(500).json({ success: false, message: 'Internal Server Error' });
+//   }
+// }
+
 async function getCartItems(req, res) {
   try {
-    const { page = 1, limit = 5 } = req.query;
+    const { page = 1, limit = 5, searchTerm = '', filterByProductName = false, filterByStatus = false, filterByCategory = false, filterByVendor = false } = req.query;
     const userId = req.user.userId;
-    const data = await dashboardService.getCartItems(userId, Number(page), Number(limit));
+
+    // Prepare filter params object to pass to the service
+    const filters = {
+      searchTerm,
+      filterByProductName,
+      filterByStatus,
+      filterByCategory,
+      filterByVendor
+    };
+
+    const data = await dashboardService.getCartItems(userId, Number(page), Number(limit), filters);
     res.json({ success: true, ...data });
   } catch (error) {
-    console.error('Error fetching cartProducts:', error);
+    console.error('Error fetching cart items:', error);
     res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 }
+
 
 
 // Update quantities in the cart and product stock with transaction for multiple products

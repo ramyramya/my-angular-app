@@ -2,52 +2,54 @@
   background-color: #DADCFA;
 }
 
-/* Optional: Adjust margins and paddings if needed to fix overflow */
+
 .table-responsive {
   margin-bottom: 1rem;
 }
 
-/* Action buttons styling */
+
 .table .btn {
   border: none;
   background: transparent;
-  padding: 0.375rem 0.6rem; /* Adjust padding if needed */
-  font-size: 1.125rem; /* Icon size */
-  color: #000; /* Icon color */
+  padding: 0.375rem 0.6rem; 
+  font-size: 1.125rem; 
+  color: #000;
+  
 }
 
 .table .btn:hover {
-  color: #007bff; /* Change color on hover */
+  color: blueviolet;
 }
 
-/* Pagination */
+
 .pagination .page-item .page-link {
   font-size: 16px;
   font-weight: bold;
   transition: background-color 0.3s, transform 0.3s;
+  color: blueviolet;
 }
 
 .pagination .page-item .page-link:hover {
-  background-color: #007bff; /* Blue color for hover effect */
-  color: #ffffff; /* White text when hovered */
-  transform: scale(1.1); /* Slight zoom effect on hover */
+  background-color: blueviolet; 
+  color: #ffffff; 
+  transform: scale(1.1); 
 }
 
 .pagination .page-item.active .page-link {
-  background-color: #007bff; /* Active page button with blue background */
-  color: #ffffff; /* White text */
+  background-color: blueviolet; 
+  color: #ffffff; 
 }
 
 .pagination .page-item.disabled .page-link {
-  color: #6c757d; /* Disabled button color */
-  pointer-events: none; /* Disable clicking on the previous/next when disabled */
+  color: #6c757d;
+  pointer-events: none; 
 }
 
 .pagination {
   font-family: 'Arial', sans-serif;
 }
 
-/* Filter Container */
+
 .filter-container {
   display: flex;
   justify-content: flex-end;
@@ -56,32 +58,31 @@
 
 .filter-dropdown {
   position: absolute;
-  top: 100%; /* Makes it appear below the filter button */
-  right: 0; /* Aligns it to the right of the filter button */
-  width: 200px; /* Or any suitable width */
-  background-color: #fff; /* Optional, for better visibility */
-  border: 1px solid #ccc; /* Optional, adds border */
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Optional, for shadow */
-  z-index: 1000; /* Ensures it stays on top of other elements */
+  top: 100%;
+  right: 0; 
+  width: 200px; 
+  background-color: #fff;
+  border: 1px solid #ccc; 
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); 
+  z-index: 1000; 
 }
 .filter-option {
-  margin-bottom: 8px; /* Add spacing between filter options */
+  margin-bottom: 8px; 
 }
 
 /* Custom Transparent Colors */
 .bg-transparent-purple {
-  background-color: rgba(111, 66, 193, 0.7); /* Violet with 30% opacity */
+  background-color: rgba(111, 66, 193, 0.5); 
 }
 
 .bg-transparent-pink {
-  background-color: rgba(232, 62, 140, 0.7); /* Pink with 30% opacity */
-}
+  background-color: rgba(232, 62, 140, 0.5); }
 
 .bg-transparent-yellow {
-  background-color: rgba(255, 193, 7, 0.7); /* Yellow with 30% opacity */
+  background-color: rgba(255, 193, 7, 0.5); 
 }
 
-/* Add custom styles for the file upload area */
+
 .upload-area {
   min-height: 200px;
   border: 2px dashed #aaa;
@@ -109,20 +110,19 @@
 }
 
 
-/* Chat Icon Styling */
-/* Container to position the chat icon at the bottom-right */
+
 .chat-icon-container {
   position: fixed;
-  bottom: 20px; /* Distance from the bottom */
-  right: 20px; /* Distance from the right */
-  z-index: 1000; /* Ensure it stays on top of other content */
+  bottom: 20px; 
+  right: 20px; 
+  z-index: 1000; 
   cursor: pointer;
 }
 
-/* Styling for the chat icon */
+
 .chat-icon {
   position: relative;
-  background-color: #007bff; /* Bootstrap primary color */
+  background-color: blueviolet;
   color: white;
   border-radius: 50%;
   width: 60px;
@@ -130,16 +130,16 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 30px; /* Size of the icon */
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  font-size: 30px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease-in-out;
 }
 
 .chat-icon:hover {
-  transform: scale(1.1); /* Slight zoom effect on hover */
+  transform: scale(1.1); 
 }
 
-/* Styling for the unread messages count badge */
+
 .unread-count {
   position: absolute;
   top: 5px;
@@ -154,20 +154,20 @@
   align-items: center;
   font-size: 12px;
   font-weight: bold;
-  border: 2px solid white; /* Adds a border to separate from the icon */
+  border: 2px solid white; 
 }
 
 
 
-/* Chat Window Styling */
+
 .chat-window {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: white;
-  width: 500px; /* Increased width */
-  height: 600px; /* Increased height */
+  width: 500px; 
+  height: 600px; 
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -176,9 +176,9 @@
   overflow: hidden;
 }
 
-/* Chat Header */
+
 .chat-header {
-  background-color: #007bff;
+  background-color: blueviolet;
   color: white;
   padding: 10px;
   text-align: center;
@@ -196,7 +196,7 @@
   cursor: pointer;
 }
 
-/* Chat Messages */
+
 .chat-messages {
   flex: 1;
   overflow-y: auto;
@@ -207,7 +207,7 @@
   gap: 8px;
 }
 
-/* Chat Input */
+
 .chat-input {
   padding: 10px;
   display: flex;
@@ -216,39 +216,39 @@
   background-color: #fff;
   border-top: 1px solid #ddd;
   position: sticky;
-  bottom: 0; /* Keep it at the bottom */
+  bottom: 0; 
   background-color: #fff;
 }
 
 .chat-input select {
-  flex: 1.2; /* Adjust the width for better spacing */
+  flex: 1.2; 
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
 
 .chat-input input {
-  flex: 2; /* Adjust width for better usability */
+  flex: 2; 
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
 
 .chat-input button {
-  background-color: #007bff;
+  background-color: blueviolet;
   color: white;
   padding: 10px 14px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 16px; /* Increase button text size */
+  font-size: 16px; 
 }
 
 .chat-input button:hover {
-  background-color: #0056b3;
+  background-color: blueviolet;
 }
 
-/* Message Styles */
+
 .message-left {
   align-self: flex-start;
   background-color: #f1f1f1;
@@ -259,9 +259,77 @@
 
 .message-right {
   align-self: flex-end;
-  background-color: #007bff;
+  background-color: blueviolet;
   color: white;
   padding: 8px 12px;
   border-radius: 10px;
   max-width: 70%;
+} 
+
+/* Add this to your custom styles or global styles file */
+.btn-blue-violet {
+  background-color: #8A2BE2;
+  border-color: #8A2BE2;
+  color: white;
 }
+
+.btn-blue-violet:hover {
+  background-color: #7A1DCE;
+  border-color: #7A1DCE;
+}
+
+/* Custom blue-violet outline button */
+.btn-outline-blue-violet {
+  border-color: #8A2BE2;
+  color: #8A2BE2;
+}
+
+.btn-outline-blue-violet:hover {
+  background-color: #8A2BE2;
+  color: white;
+  border-color: #8A2BE2;
+}
+
+
+/* Style for the upload area */
+.upload-area {
+  border: 2px dashed blueviolet;
+  background-color: #f8f9fa;
+  padding: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.upload-area:hover {
+  background-color: #e9ecef;
+}
+
+.upload-area .upload-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+}
+
+.upload-area .upload-message i {
+  color: blueviolet;
+}
+
+.upload-area .upload-message p {
+  margin-top: 10px;
+  font-size: 1rem;
+}
+
+.upload-area .dragover {
+  background-color: #e2e6ea;
+  border-color: blueviolet;
+}
+
+/* Style for the selected file name */
+.upload-area .mt-3 {
+  font-size: 0.9rem;
+  color: #495057;
+  font-weight: 500;
+}
+

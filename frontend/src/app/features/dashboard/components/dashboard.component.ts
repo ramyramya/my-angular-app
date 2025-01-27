@@ -109,7 +109,10 @@ export class DashboardComponent implements OnInit {
       debounceTime(300), // Wait for 300ms pause in events
       distinctUntilChanged() // Only emit if value is different from previous value
     ).subscribe(searchTerm => {
-      this.fetchPage(1);
+      if(!this.showCart)
+        this.fetchPage(1);
+      else
+        this.fetchCartPage(1)
     });
     this.dashboardService.getUserData().subscribe(data => {
       this.userId = data.userId;
@@ -327,10 +330,39 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  // fetchCartPage(page: number): void {
+  //   if (page < 1 || (this.totalCartPages && page > this.totalCartPages)) return;
+
+  //   this.dashboardService.getCartItems(page, this.cartPageSize).subscribe({
+  //     next: (data) => {
+  //       console.log(data);
+  //       this.cartProducts = data.products;
+  //       this.totalCartItems = data.total;
+  //       this.currentCartPage = data.page;
+  //       this.totalCartPages = Math.ceil(this.totalCartItems / this.cartPageSize);
+  //       this.cartPages = Array.from({ length: this.totalCartPages }, (_, i) => i + 1);
+  //       console.log(this.cartPages);
+  //       console.log("cartProducts: ", this.cartProducts);
+  //     },
+  //     error: (error) => {
+  //       console.error('Error fetching cartProducts:', error);
+  //     },
+  //   });
+  // }
+
   fetchCartPage(page: number): void {
     if (page < 1 || (this.totalCartPages && page > this.totalCartPages)) return;
+    const params = {
+      page: page.toString(),
+      limit: this.pageSize.toString(),
+      searchTerm: this.searchTerm || '',
+      filterByProductName: this.filterByProductName,
+      filterByStatus: this.filterByStatus,
+      filterByCategory: this.filterByCategory,
+      filterByVendor: this.filterByVendor
+    };
 
-    this.dashboardService.getCartItems(page, this.cartPageSize).subscribe({
+    this.dashboardService.getCartItems(params).subscribe({
       next: (data) => {
         console.log(data);
         this.cartProducts = data.products;
@@ -346,7 +378,6 @@ export class DashboardComponent implements OnInit {
       },
     });
   }
-
   // Load categories for the dropdown
   loadCategories(): void {
     this.dashboardService.getCategories().subscribe({
@@ -1056,6 +1087,42 @@ export class DashboardComponent implements OnInit {
     const extension = fileName.split('.').pop()?.toLowerCase(); // Extract the file extension
     return extension || ''; // Return the extension or an empty string
   }
+
+  extractFileName(fileKey: string): string {
+    const fileName = fileKey.split('/').pop();  
+    return fileName || '';  
+  }
+
+
+  getFileIconClass(fileKey: string): string {
+    const extension = this.getFileType(fileKey);
+    
+    const iconMap: { [key: string]: string } = {
+      'pdf': 'bi bi-file-earmark-pdf text-danger',
+      'doc': 'bi bi-file-earmark-word text-primary',
+      'docx': 'bi bi-file-earmark-word text-primary',
+      'xls': 'bi bi-file-earmark-excel text-success',
+      'xlsx': 'bi bi-file-earmark-excel text-success',
+      'ppt': 'bi bi-file-earmark-ppt text-warning',
+      'pptx': 'bi bi-file-earmark-ppt text-warning',
+      'jpg': 'bi bi-file-earmark-image text-info',
+      'jpeg': 'bi bi-file-earmark-image text-info',
+      'png': 'bi bi-file-earmark-image text-info',
+      'gif': 'bi bi-file-earmark-image text-info',
+      'txt': 'bi bi-file-earmark-text text-secondary',
+      'zip': 'bi bi-file-earmark-zip text-dark',
+      'rar': 'bi bi-file-earmark-zip text-dark',
+      'mp4': 'bi bi-file-earmark-play text-danger',
+      'mp3': 'bi bi-file-earmark-music text-success',
+      'csv': 'bi bi-file-earmark-spreadsheet text-success',
+      'json': 'bi bi-file-earmark-code text-dark',
+      'js': 'bi bi-file-earmark-code text-warning',
+      'ts': 'bi bi-file-earmark-code text-primary'
+    };
+  
+    return iconMap[extension] || 'bi bi-file-earmark text-muted'; // Default icon if no match found
+  }
+  
   
 
 }

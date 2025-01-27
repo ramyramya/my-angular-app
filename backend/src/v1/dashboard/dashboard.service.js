@@ -505,28 +505,87 @@ async function moveToCart(products){
 // }
 
 
-async function getCartItems(userId, page = 1, limit = 5) {
+// async function getCartItems(userId, page = 1, limit = 5) {
+//   try {
+//     const offset = (page - 1) * limit;
+
+//     // Fetch the total count of cart items for the user where quantity > 0 and product is available
+//     const totalItemsQuery = knex('carts')
+//       .count('* as total')
+//       .where('user_id', userId)
+//       .andWhere('quantity', '>', 0) // Ensure quantity is greater than 0
+//       .join('products', 'carts.product_id', '=', 'products.product_id')
+//       .andWhere('products.status', '=', 1) // Ensure the product is available
+//       .first();
+
+//     // Fetch cart items along with related product, category, and vendor information where quantity > 0 and product is available
+//     const cartItemsQuery = knex('carts')
+//       .join('products', 'carts.product_id', '=', 'products.product_id')
+//       .join('categories', 'products.category_id', '=', 'categories.category_id')
+//       .join('product_to_vendor', function () {
+//         this.on('products.product_id', '=', 'product_to_vendor.product_id')
+//           .andOn('carts.vendor_id', '=', 'product_to_vendor.vendor_id'); // Ensure cart's vendor matches
+//       })
+//       .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id') // Tie to correct vendor
+//       .select(
+//         'carts.id',
+//         'products.product_id',
+//         'products.product_name',
+//         'products.product_image',
+//         'categories.category_name',
+//         'vendors.vendor_name',
+//         'carts.quantity',
+//         'carts.quantity as initialQuantity',
+//         'products.quantity_in_stock'
+//       )
+//       .where('carts.user_id', userId)
+//       .andWhere('carts.quantity', '>', 0) // Ensure quantity is greater than 0
+//       .andWhere('products.status', '=', 1) // Ensure the product is available
+//       .groupBy(
+//         'carts.id', // Group by unique cart ID to prevent duplicate rows
+//         'products.product_id',
+//         'products.product_name',
+//         'products.product_image',
+//         'categories.category_name',
+//         'vendors.vendor_name',
+//         'carts.quantity',
+//         'products.quantity_in_stock'
+//       )
+//       .limit(limit)
+//       .offset(offset);
+
+//     // Execute both queries in parallel
+//     const [totalResult, cartItems] = await Promise.all([totalItemsQuery, cartItemsQuery]);
+
+//     // If no cart items are found for the user, throw an error
+//     if (!totalResult.total || cartItems.length === 0) {
+//       throw new Error('No cart items found for this user');
+//     }
+
+//     return {
+//       total: totalResult.total,
+//       page,
+//       limit,
+//       products: cartItems,
+//     };
+//   } catch (error) {
+//     console.error('Error fetching cart items in service:', error);
+//     throw error; // Re-throw the error to be handled by the controller
+//   }
+// }
+async function getCartItems(userId, page = 1, limit = 5, filters = {}) {
   try {
     const offset = (page - 1) * limit;
 
-    // Fetch the total count of cart items for the user where quantity > 0 and product is available
-    const totalItemsQuery = knex('carts')
-      .count('* as total')
-      .where('user_id', userId)
-      .andWhere('quantity', '>', 0) // Ensure quantity is greater than 0
-      .join('products', 'carts.product_id', '=', 'products.product_id')
-      .andWhere('products.status', '=', 1) // Ensure the product is available
-      .first();
-
-    // Fetch cart items along with related product, category, and vendor information where quantity > 0 and product is available
-    const cartItemsQuery = knex('carts')
+    // Build the initial query for cart items
+    let query = knex('carts')
       .join('products', 'carts.product_id', '=', 'products.product_id')
       .join('categories', 'products.category_id', '=', 'categories.category_id')
       .join('product_to_vendor', function () {
         this.on('products.product_id', '=', 'product_to_vendor.product_id')
-          .andOn('carts.vendor_id', '=', 'product_to_vendor.vendor_id'); // Ensure cart's vendor matches
+          .andOn('carts.vendor_id', '=', 'product_to_vendor.vendor_id');
       })
-      .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id') // Tie to correct vendor
+      .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id')
       .select(
         'carts.id',
         'products.product_id',
@@ -539,40 +598,91 @@ async function getCartItems(userId, page = 1, limit = 5) {
         'products.quantity_in_stock'
       )
       .where('carts.user_id', userId)
-      .andWhere('carts.quantity', '>', 0) // Ensure quantity is greater than 0
-      .andWhere('products.status', '=', 1) // Ensure the product is available
-      .groupBy(
-        'carts.id', // Group by unique cart ID to prevent duplicate rows
-        'products.product_id',
-        'products.product_name',
-        'products.product_image',
-        'categories.category_name',
-        'vendors.vendor_name',
-        'carts.quantity',
-        'products.quantity_in_stock'
-      )
+      .andWhere('carts.quantity', '>', 0)
+      .andWhere('products.status', '=', 1)
       .limit(limit)
       .offset(offset);
 
-    // Execute both queries in parallel
-    const [totalResult, cartItems] = await Promise.all([totalItemsQuery, cartItemsQuery]);
+    // Apply filters if provided
+    if (filters.searchTerm) {
+      query = query.andWhere(function() {
+        this.where('products.product_name', 'like', `%${filters.searchTerm}%`)
+            .orWhere('categories.category_name', 'like', `%${filters.searchTerm}%`)
+            .orWhere('vendors.vendor_name', 'like', `%${filters.searchTerm}%`);
+      });
+    }
 
-    // If no cart items are found for the user, throw an error
-    if (!totalResult.total || cartItems.length === 0) {
-      throw new Error('No cart items found for this user');
+    if (filters.filterByProductName) {
+      query = query.andWhere('products.product_name', 'like', `%${filters.searchTerm}%`);
+    }
+    if (filters.filterByCategory) {
+      query = query.andWhere('categories.category_name', 'like', `%${filters.searchTerm}%`);
+    }
+    if (filters.filterByVendor) {
+      query = query.andWhere('vendors.vendor_name', 'like', `%${filters.searchTerm}%`);
+    }
+
+    // Query for the total count of matching products (with applied filters)
+    let totalItemsQuery = knex('carts')
+      .join('products', 'carts.product_id', '=', 'products.product_id')
+      .join('categories', 'products.category_id', '=', 'categories.category_id')
+      .join('product_to_vendor', function () {
+        this.on('products.product_id', '=', 'product_to_vendor.product_id')
+          .andOn('carts.vendor_id', '=', 'product_to_vendor.vendor_id');
+      })
+      .join('vendors', 'product_to_vendor.vendor_id', '=', 'vendors.vendor_id')
+      .count('* as total')
+      .where('carts.user_id', userId)
+      .andWhere('carts.quantity', '>', 0)
+      .andWhere('products.status', '=', 1);
+
+    // Apply filters to total count query as well
+    if (filters.searchTerm) {
+      totalItemsQuery = totalItemsQuery.andWhere(function() {
+        this.where('products.product_name', 'like', `%${filters.searchTerm}%`)
+            .orWhere('categories.category_name', 'like', `%${filters.searchTerm}%`)
+            .orWhere('vendors.vendor_name', 'like', `%${filters.searchTerm}%`);
+      });
+    }
+
+    if (filters.filterByProductName) {
+      totalItemsQuery = totalItemsQuery.andWhere('products.product_name', 'like', `%${filters.searchTerm}%`);
+    }
+    if (filters.filterByCategory) {
+      totalItemsQuery = totalItemsQuery.andWhere('categories.category_name', 'like', `%${filters.searchTerm}%`);
+    }
+    if (filters.filterByVendor) {
+      totalItemsQuery = totalItemsQuery.andWhere('vendors.vendor_name', 'like', `%${filters.searchTerm}%`);
+    }
+
+    // Execute both queries in parallel
+    const [totalResult, cartItems] = await Promise.all([totalItemsQuery, query]);
+    //console.log("TotalResult: ", totalResult);
+    //console.log("CartItems: ", cartItems);
+
+    // If no cart items are found, return empty products
+    if (!totalResult[0].total || cartItems.length === 0) {
+      return {
+        total: 0,
+        page,
+        limit,
+        products: [],
+      };
     }
 
     return {
-      total: totalResult.total,
+      total: totalResult[0].total,
       page,
       limit,
       products: cartItems,
     };
   } catch (error) {
     console.error('Error fetching cart items in service:', error);
-    throw error; // Re-throw the error to be handled by the controller
+    throw error;
   }
 }
+
+
 
 
 
@@ -849,21 +959,21 @@ async function fetchAllUsers() {
   }
 }
 
-async function fetchMessages(userId) {
-  try {
-    const messages = await knex('messages')
-      .select('users.username as sender', 'messages.message as text')
-      .join('users', 'messages.sender_id', 'users.id')
-      .where('messages.receiver_id', userId)
-      .orWhere('messages.sender_id', userId)
-      .orderBy('messages.created_at', 'asc');
+// async function fetchMessages(userId) {
+//   try {
+//     const messages = await knex('messages')
+//       .select('users.username as sender', 'messages.message as text')
+//       .join('users', 'messages.sender_id', 'users.id')
+//       .where('messages.receiver_id', userId)
+//       .orWhere('messages.sender_id', userId)
+//       .orderBy('messages.created_at', 'asc');
 
-    return messages;
-  } catch (error) {
-    console.error('Error fetching messages:', error);
-    throw error;
-  }
-}
+//     return messages;
+//   } catch (error) {
+//     console.error('Error fetching messages:', error);
+//     throw error;
+//   }
+// }
 
 // async function saveMessageToDatabase(senderId, receiverId, text, isRead){
 //   knex('messages').insert({
@@ -898,7 +1008,7 @@ module.exports = {
   deleteCartItem,
   updateProductDetails,
   fetchAllUsers,
-  fetchMessages,
+  //fetchMessages,
   getActiveUsers,
   //saveMessageToDatabase,
 };

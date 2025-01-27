@@ -112,10 +112,39 @@ doc.text(`Status: ${product.product_status === 1 ? 'Available' : 'Sold Out'}`, 1
     return this.http.post(`${this.apiUrl}/move-to-cart`, { products });
   }
 
-  // Fetch cart items for the logged-in user
-  getCartItems(page: number, limit: number): Observable<{ success: string; products: Product[]; total: number; page: number; limit: number }> {
-    return this.http.get<{ success: string; products: Product[]; total: number; page: number; limit: number }>(`${this.apiUrl}/cart?page=${page}&limit=${limit}`);
+  // // Fetch cart items for the logged-in user
+  // getCartItems(page: number, limit: number): Observable<{ success: string; products: Product[]; total: number; page: number; limit: number }> {
+  //   return this.http.get<{ success: string; products: Product[]; total: number; page: number; limit: number }>(`${this.apiUrl}/cart?page=${page}&limit=${limit}`);
+  // }
+
+  getCartItems(params: any): Observable<{ success: string; products: Product[]; total: number; page: number; limit: number }> {
+    console.log("Params: ", params);
+  
+    let httpParams = new HttpParams()
+      .set('page', params.page)
+      .set('limit', params.limit);
+  
+    // Add the filters if they are provided
+    if (params.searchTerm) {
+      httpParams = httpParams.set('searchTerm', params.searchTerm);
+    }
+    if (params.filterByProductName) {
+      httpParams = httpParams.set('filterByProductName', 'true');
+    }
+    if (params.filterByStatus) {
+      httpParams = httpParams.set('filterByStatus', 'true');
+    }
+    if (params.filterByCategory) {
+      httpParams = httpParams.set('filterByCategory', 'true');
+    }
+    if (params.filterByVendor) {
+      httpParams = httpParams.set('filterByVendor', 'true');
+    }
+  
+    // Send GET request with the parameters and filters
+    return this.http.get<{ success: string; products: Product[]; total: number; page: number; limit: number }>(`${this.apiUrl}/cart`, { params: httpParams });
   }
+  
 
 
   // Method to update the cart item quantity and product stock
