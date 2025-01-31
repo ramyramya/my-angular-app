@@ -12,6 +12,7 @@ module.exports = router;*/
 const express = require('express');
 const router = express.Router();
 const dashboardController = require('./dashboard.controller');
+const dashboardService = require('./dashboard.service');
 const authMiddleware = require('../../middleware/authMiddleware');
 
 // Route to get user info
@@ -42,5 +43,7 @@ router.get("/active-users", dashboardController.getActiveUsers);
 router.get('/imported-files', authMiddleware, dashboardController.getImportedFiles);
 router.post('/get-presigned-url-for-import-file', authMiddleware, dashboardController.getPresignedUrlForImportFile);
 router.post('/save-imported-file-details', authMiddleware, dashboardController.saveImportedFileDetails);
+
+router.get('/process-files', authMiddleware, dashboardService.processImportedFile);
 module.exports = router;
 

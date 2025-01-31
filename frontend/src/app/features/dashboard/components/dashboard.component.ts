@@ -43,7 +43,7 @@ export class DashboardComponent implements OnInit {
   pageSize: number = 5; // Items per page
   totalItems: number = 0;
   pages: number[] = [];
-
+  visiblePages: number[] = [];
   currentCartPage: number = 1;
   totalCartPages: number = 1;
   cartPageSize: number = 5; // Items per page
@@ -332,11 +332,31 @@ export class DashboardComponent implements OnInit {
         this.currentPage = data.page;
         this.totalPages = Math.ceil(this.totalItems / this.pageSize);
         this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
+        this.updatePagination();
       },
       error: (error) => {
         console.error('Error fetching products:', error);
       }
     });
+  }
+
+
+  updatePagination() {
+    this.visiblePages = [];
+  
+    if (this.totalPages <= 3) {
+      this.visiblePages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
+    } else {
+      this.visiblePages = [1, 2, 3];
+  
+      if (this.currentPage > 3 && this.currentPage < this.totalPages - 2) {
+        this.visiblePages = [1, this.currentPage - 1, this.currentPage, this.currentPage + 1];
+      }
+  
+      if (this.currentPage >= this.totalPages - 2) {
+        this.visiblePages = [1, this.totalPages - 2, this.totalPages - 1];
+      }
+    }
   }
 
   // fetchCartPage(page: number): void {
@@ -919,6 +939,7 @@ export class DashboardComponent implements OnInit {
     this.dashboardService.getImportedFiles().subscribe({
       next: (response) => {
         this.ImportedFiles = response.files;
+        console.log("Imported Files: ", this.ImportedFiles);
       },
       error: (error) => {
         console.error('Error fetching uploaded files:', error);
@@ -1142,6 +1163,39 @@ export class DashboardComponent implements OnInit {
     previewModal.show();
   }
 
+  previewErrorFile(file: { key: string; error_file_key: string; url: string; type: string }): void {
+    // Set the previewed file for reference
+    this.previewedFile = file;
+    const fileType = this.getFileType(file.error_file_key || file.url);
+  
+    // Handle `.xlsx` files with Office View
+    if (fileType === 'xlsx') {
+      console.log("It is a excel file");
+      const officeBaseUrl = 'https://view.officeapps.live.com/op/view.aspx?src=';
+      const encodedUrl = encodeURIComponent(file.error_file_key);
+  
+      // Safely construct the Office View URL
+      this.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(officeBaseUrl + encodedUrl);
+    } else {
+      // Safely sanitize the file's URL for other file types
+      this.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(file.url);
+    }
+  
+    // Get the modal element
+    const previewModalElement = document.getElementById('filePreviewModal') as HTMLElement;
+  
+    // Initialize the modal
+    const previewModal = new bootstrap.Modal(previewModalElement);
+  
+    // Add an event listener for when the modal is hidden
+    previewModalElement.addEventListener('hidden.bs.modal', () => {
+      this.previewedFile = null;
+      this.safeUrl = null;
+    });
+  
+    // Show the modal
+    previewModal.show();
+  }
   getFileType(fileName: string): string {
     const extension = fileName.split('.').pop()?.toLowerCase(); // Extract the file extension
     return extension || ''; // Return the extension or an empty string
