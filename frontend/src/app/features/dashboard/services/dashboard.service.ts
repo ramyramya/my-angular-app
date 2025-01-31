@@ -199,7 +199,17 @@ getActiveUsers(): Observable<any[]> {
 //     callback(users);
 //   });
 // }
-  
+getPresignedUrlForImportFile(fileName: string, fileType: string): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/get-presigned-url-for-import-file`, { fileName, fileType });
+}
+
+saveImportedFileDetails(fileUrl: string, username: string, userId: number): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/save-imported-file-details`, { fileUrl, username, userId });
+}
+
+getImportedFiles(): Observable<any> {
+  return this.http.get(`${this.apiUrl}/imported-files`);
+}
 }
 
   

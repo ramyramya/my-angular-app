@@ -611,6 +611,74 @@ async function getActiveUsers(req, res) {
   }
 }
 
+async function getImportedFiles(req, res) {
+  try {
+    const files = await knex('imported_files').select('*');
+    res.json({ success: true, files });
+  } catch (error) {
+    console.error('Error fetching imported files:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+}
+
+async function getPresignedUrlForImportFile(req, res) {
+  try {
+    const { payload } = req.body;
+
+    // Decrypt the incoming payload
+    const secretKey = process.env.SECRET_KEY;
+    const decryptedData = CryptoJS.AES.decrypt(payload, secretKey).toString(CryptoJS.enc.Utf8);
+    console.log(decryptedData);
+    const { fileName, fileType } = JSON.parse(decryptedData);
+    const { userName, userId } = req.user;
+    
+
+    const filePath = `imports/${userName}/${userId}/${fileName}`;
+    const s3Params = {
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: filePath,
+      Expires: 60 * 50,
+      ContentType: fileType,
+    };
+    const presignedUrl = await s3.getSignedUrlPromise('putObject', s3Params);
+
+    res.json({
+      success: true,
+      presignedUrl,
+      fileUrl: `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${filePath}`
+    });
+  } catch (error) {
+    console.error('Error generating presigned URL:', error);
+    res.status(500).json({ success: false, message: 'Error generating presigned URL' });
+  }
+}
+
+
+async function saveImportedFileDetails(req, res) {
+  try {
+    const { payload } = req.body;
+
+    // Decrypt the incoming payload
+    const secretKey = process.env.SECRET_KEY;
+    const decryptedData = CryptoJS.AES.decrypt(payload, secretKey).toString(CryptoJS.enc.Utf8);
+    console.log(decryptedData);
+    
+    const { fileUrl, username, userId } = JSON.parse(decryptedData);
+
+    await knex('imported_files').insert({
+      file_key: fileUrl,
+      username,
+      user_id: userId,
+      status: 'pending',
+    });
+
+    res.json({ success: true, message: 'File details saved successfully' });
+  } catch (error) {
+    console.error('Error saving file details:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+}
+
 module.exports = {
   getUserInfo,
   getPresignedUrl,
@@ -631,7 +699,10 @@ module.exports = {
   getUserFiles,
   getUsers,
   //getMessages,
-  getActiveUsers
+  getActiveUsers,
+  getImportedFiles,
+  getPresignedUrlForImportFile,
+  saveImportedFileDetails
 };
 
 

@@ -27,7 +27,7 @@ export class DashboardComponent implements OnInit {
   messages: { senderId: number, sender: string, text: string, receiverId: number }[] = [];
   users: { id: number, username: string }[] = [];
   selectedUserId !: number;
-
+  //selectedUser !: number;
   // Define the transparent colors for badges (violet, pink, yellow)
   badgeColors = [
     'bg-transparent-purple',  // Transparent Violet
@@ -86,6 +86,9 @@ export class DashboardComponent implements OnInit {
 
   selectedFileName: string = '';
   unreadMessagesCount = 0;
+
+  selectedFileForImport: File | null = null;
+  ImportedFiles: any[] = [];
   
   constructor(
     private dashboardService: DashboardService, private toastr: ToastrService,
@@ -105,6 +108,7 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.loadImportedFiles();
     this.searchTermSubject.pipe(
       debounceTime(300), // Wait for 300ms pause in events
       distinctUntilChanged() // Only emit if value is different from previous value
@@ -192,7 +196,12 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  
+  // onUserChange(event: any): void {
+  //   console.log("Function called");
+  //   this.selectedUser = event.target.value;
+  //   console.log('Selected User:', this.selectedUser);
+  //   this.socket.emit('leave', this.selectedUser);
+  // }
 
   toggleChat(): void {
     this.isChatVisible = !this.isChatVisible;
@@ -789,24 +798,29 @@ export class DashboardComponent implements OnInit {
   }
 
 
-  onFileChange(event: any): void {
-    const target: DataTransfer = <DataTransfer>(event.target);
-    if (target.files.length !== 1) {
-      console.error('Cannot use multiple files');
-      return;
-    }
+  // onFileChange(event: any): void {
+  //   const target: DataTransfer = <DataTransfer>(event.target);
+  //   if (target.files.length !== 1) {
+  //     console.error('Cannot use multiple files');
+  //     return;
+  //   }
 
-    const reader: FileReader = new FileReader();
-    reader.onload = (e: ProgressEvent<FileReader>) => {
-      const arrayBuffer: ArrayBuffer = e.target!.result as ArrayBuffer;
-      const workbook: XLSX.WorkBook = XLSX.read(arrayBuffer, { type: 'array' });
-      const sheetName: string = workbook.SheetNames[0];
-      const sheetData: XLSX.WorkSheet = workbook.Sheets[sheetName];
-      this.fileData = XLSX.utils.sheet_to_json(sheetData);
-      this.selectedFileName = target.files[0].name;
-      console.log('Parsed Data:', this.fileData);
-    };
-    reader.readAsArrayBuffer(target.files[0]);
+  //   const reader: FileReader = new FileReader();
+  //   reader.onload = (e: ProgressEvent<FileReader>) => {
+  //     const arrayBuffer: ArrayBuffer = e.target!.result as ArrayBuffer;
+  //     const workbook: XLSX.WorkBook = XLSX.read(arrayBuffer, { type: 'array' });
+  //     const sheetName: string = workbook.SheetNames[0];
+  //     const sheetData: XLSX.WorkSheet = workbook.Sheets[sheetName];
+  //     this.fileData = XLSX.utils.sheet_to_json(sheetData);
+  //     this.selectedFileName = target.files[0].name;
+  //     console.log('Parsed Data:', this.fileData);
+  //   };
+  //   reader.readAsArrayBuffer(target.files[0]);
+  // }
+
+  
+  onFileChange(event: any): void {
+    this.selectedFileForImport = event.target.files[0];
   }
 
   // Handle drag over event to allow file drop
@@ -821,7 +835,7 @@ export class DashboardComponent implements OnInit {
     event.stopPropagation();
     const files = event.dataTransfer?.files;
     if (files && files.length === 1) {
-      this.handleFile(files[0]);
+      this.selectedFileForImport = files[0];
     }
   }
 
@@ -831,41 +845,86 @@ export class DashboardComponent implements OnInit {
     event.stopPropagation();
   }
 
-  // Handle the dropped file
-  private handleFile(file: File): void {
-    this.selectedFileName = file.name;
-    const reader: FileReader = new FileReader();
-    reader.onload = (e: ProgressEvent<FileReader>) => {
-      const arrayBuffer: ArrayBuffer = e.target!.result as ArrayBuffer;
-      const workbook: XLSX.WorkBook = XLSX.read(arrayBuffer, { type: 'array' });
-      const sheetName: string = workbook.SheetNames[0];
-      const sheetData: XLSX.WorkSheet = workbook.Sheets[sheetName];
-      this.fileData = XLSX.utils.sheet_to_json(sheetData);
-      console.log('Parsed Data:', this.fileData);
-    };
-    reader.readAsArrayBuffer(file);
-  }
+  // // Handle the dropped file
+  // private handleFile(file: File): void {
+  //   this.selectedFileName = file.name;
+  //   const reader: FileReader = new FileReader();
+  //   reader.onload = (e: ProgressEvent<FileReader>) => {
+  //     const arrayBuffer: ArrayBuffer = e.target!.result as ArrayBuffer;
+  //     const workbook: XLSX.WorkBook = XLSX.read(arrayBuffer, { type: 'array' });
+  //     const sheetName: string = workbook.SheetNames[0];
+  //     const sheetData: XLSX.WorkSheet = workbook.Sheets[sheetName];
+  //     this.fileData = XLSX.utils.sheet_to_json(sheetData);
+  //     console.log('Parsed Data:', this.fileData);
+  //   };
+  //   reader.readAsArrayBuffer(file);
+  // }
+  uploadImportedFile(): void {
+    if (this.selectedFileForImport) {
+      this.dashboardService.getPresignedUrlForImportFile(this.selectedFileForImport.name, this.selectedFileForImport.type).subscribe({
+        next: (response) => {
+          const presignedUrl = response.presignedUrl;
+          const fileUrl = response.fileUrl;
 
-  // Upload data to backend
-  uploadData(): void {
-    if (this.fileData.length > 0) {
-      this.dashboardService.updateProductData(this.fileData).subscribe({
-        next: (res) => {
-          console.log('Data updated successfully!', res);
-          this.closeModal("importModal");
-          this.selectedFileName = '';
-          this.toastr.success("Data Uploaded Successfully", "Success");
+          fetch(presignedUrl, {
+            method: 'PUT',
+            headers: this.selectedFileForImport?.type ? {
+              'Content-Type': this.selectedFileForImport.type,
+            } : undefined,
+            body: this.selectedFileForImport,
+          }).then(() => {
+            this.toastr.success('File uploaded successfully');
+            this.dashboardService.saveImportedFileDetails(fileUrl, this.userName, this.userId).subscribe({
+              next: () => {
+                this.loadImportedFiles();
+              },
+              error: (error) => {
+                this.toastr.error('Error saving file details');
+                console.error('Error saving file details:', error);
+              }
+            });
+          }).catch((error) => {
+            this.toastr.error('Error uploading file');
+            console.error('Error uploading file:', error);
+          });
         },
-        error: (err) => {
-          console.error('Error updating data!', err);
-          this.toastr.error("Error Uploading Data", "Error");
-        },
+        error: (error) => {
+          this.toastr.error('Error getting presigned URL');
+          console.error('Error getting presigned URL:', error);
+        }
       });
-    } else {
-      alert('Please upload a valid file!');
     }
   }
+  // // Upload data to backend
+  // uploadData(): void {
+  //   if (this.fileData.length > 0) {
+  //     this.dashboardService.updateProductData(this.fileData).subscribe({
+  //       next: (res) => {
+  //         console.log('Data updated successfully!', res);
+  //         this.closeModal("importModal");
+  //         this.selectedFileName = '';
+  //         this.toastr.success("Data Uploaded Successfully", "Success");
+  //       },
+  //       error: (err) => {
+  //         console.error('Error updating data!', err);
+  //         this.toastr.error("Error Uploading Data", "Error");
+  //       },
+  //     });
+  //   } else {
+  //     alert('Please upload a valid file!');
+  //   }
+  // }
 
+  loadImportedFiles(): void {
+    this.dashboardService.getImportedFiles().subscribe({
+      next: (response) => {
+        this.ImportedFiles = response.files;
+      },
+      error: (error) => {
+        console.error('Error fetching uploaded files:', error);
+      }
+    });
+  }
   closeModal(modalname: string): void {
     const modalElement = document.getElementById(modalname);
     if (modalElement) {

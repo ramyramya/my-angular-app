@@ -39,5 +39,8 @@ router.get('/users', authMiddleware, dashboardController.getUsers);
 //router.get('/messages/:userId', authMiddleware, dashboardController.getMessages);
 router.get("/active-users", dashboardController.getActiveUsers);
 
+router.get('/imported-files', authMiddleware, dashboardController.getImportedFiles);
+router.post('/get-presigned-url-for-import-file', authMiddleware, dashboardController.getPresignedUrlForImportFile);
+router.post('/save-imported-file-details', authMiddleware, dashboardController.saveImportedFileDetails);
 module.exports = router;
 

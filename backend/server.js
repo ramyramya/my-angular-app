@@ -134,8 +134,8 @@ io.use((socket, next) => {
 //     });
 // });
 
-
-
+// Start the background worker
+require('./src/backgroundWorker');
 io.on('connection', (socket) => {
     console.log(`🟢 New user connected: ${socket.id}`);
 
@@ -165,7 +165,7 @@ io.on('connection', (socket) => {
       // Access the socket ID for the receiver
       const receiverSocketId = userSockets.get(receiverIdString);
       console.log(`🔍 Stored socket ID for User ${receiverIdString}: ${receiverSocketId}`);
-  
+      
       if (receiverSocketId) {
           if (io.sockets.sockets.has(receiverSocketId)) {
               io.to(receiverSocketId).emit('chat message', msg);
@@ -183,6 +183,65 @@ io.on('connection', (socket) => {
       }
   });
   
+//   socket.on('chat message', async (msg) => {
+//     console.log(`📨 Message from ${msg.senderId} to ${msg.receiverId}: ${msg.text}`);
+
+//     const senderIdString = String(msg.senderId).trim();
+//     const receiverIdString = String(msg.receiverId).trim();
+
+//     // Check if the sender is active in the database
+//     const sender = await knex("users").where("id", Number(senderIdString)).select("is_active").first();
+
+//     if (!sender || !sender.is_active) {
+//         console.log(`⚠️ Blocked message from inactive user ${senderIdString}`);
+//         return;  // Block the message and don't proceed further
+//     }
+
+//     console.log('Receiver ID:', receiverIdString, 'Keys in map:', [...userSockets.keys()]);
+
+//     // Access the socket ID for the receiver
+//     const receiverSocketId = userSockets.get(receiverIdString);
+//     console.log(`🔍 Stored socket ID for User ${receiverIdString}: ${receiverSocketId}`);
+    
+//     if (receiverSocketId) {
+//         if (io.sockets.sockets.has(receiverSocketId)) {
+//             io.to(receiverSocketId).emit('chat message', msg);
+//             console.log(`✅ Message sent to User ${receiverIdString}`);
+//         } else {
+//             console.log(`⚠️ User ${receiverIdString} socket does not exist in active connections.`);
+            
+//             // If receiver is offline, save the message in the database with "unread" status
+//             // this.dashboardService.saveMessageToDatabase(msg.senderId, msg.receiverId, msg.text, false); // "false" indicates unread
+//             // console.log(`⚠️ User ${msg.receiverId} is offline. Message saved in the database.`);
+//         }
+//     } else {
+//         console.log(`⚠️ Socket ID for User ${receiverIdString} is not stored in the map.`);
+//     }
+// });
+
+  // socket.on('leave', async (userId) => {
+  //   const userIdString = String(userId).trim();
+  //   const socketId = userSockets.get(userIdString);
+
+  //   if (socketId) {
+  //     socket.leave(userIdString);
+  //     userSockets.delete(userIdString);
+  //     console.log(`❌ User ${userIdString} left the chat.`);
+
+  //     await knex("users").where("id", Number(userIdString)).update({ is_active: false });
+
+  //     //socket.disconnect(true);
+  //     emitActiveUsers();
+
+  //     const userSocket = io.sockets.sockets.get(socketId); // Get the socket by ID
+  //   if (userSocket) {
+  //     userSocket.disconnect(true); // Disconnect only the specific user
+  //     console.log(`❌ User ${userIdString} has been disconnected.`);
+  //   }
+
+  //   emitActiveUsers();
+  //   }
+  // });
 
     // Handle disconnection
     socket.on('disconnect', async() => {
@@ -204,6 +263,8 @@ io.on('connection', (socket) => {
           // Broadcast updated active users list
           emitActiveUsers();
         }
+
+        
     
     });
 
