@@ -89,7 +89,15 @@ export class DashboardComponent implements OnInit {
 
   selectedFileForImport: File | null = null;
   ImportedFiles: any[] = [];
-  
+  fileSearchTerm: string = '';
+
+  // Pagination
+  currentFilePage: number = 1;
+  filesPerPage: number = 5;
+  totalFilePages: number = 1;
+  totalFileRecords: number = 0;
+
+  totalFilePagesArray: number[] = [];
   constructor(
     private dashboardService: DashboardService, private toastr: ToastrService,
     private fb: FormBuilder, // Form builder service for reactive forms
@@ -956,17 +964,17 @@ export class DashboardComponent implements OnInit {
   //   }
   // }
 
-  loadImportedFiles(): void {
-    this.dashboardService.getImportedFiles().subscribe({
-      next: (response) => {
-        this.ImportedFiles = response.files;
-        console.log("Imported Files: ", this.ImportedFiles);
-      },
-      error: (error) => {
-        console.error('Error fetching uploaded files:', error);
-      }
-    });
-  }
+  // loadImportedFiles(): void {
+  //   this.dashboardService.getImportedFiles().subscribe({
+  //     next: (response) => {
+  //       this.ImportedFiles = response.files;
+  //       console.log("Imported Files: ", this.ImportedFiles);
+  //     },
+  //     error: (error) => {
+  //       console.error('Error fetching uploaded files:', error);
+  //     }
+  //   });
+  // }
   closeModal(modalname: string): void {
     const modalElement = document.getElementById(modalname);
     if (modalElement) {
@@ -1257,7 +1265,51 @@ export class DashboardComponent implements OnInit {
     return iconMap[extension] || 'bi bi-file-earmark text-muted'; // Default icon if no match found
   }
   
+  loadImportedFiles(): void {
+    this.dashboardService.getImportedFiles(this.currentFilePage, this.filesPerPage, this.fileSearchTerm).subscribe({
+      next: (response) => {
+        this.ImportedFiles = response.files;
+        this.totalFilePages = response.totalPages;
+        this.totalFileRecords = response.total;
   
+        // ✅ Update pagination array
+        this.totalFilePagesArray = Array.from({ length: this.totalFilePages }, (_, i) => i + 1);
+  
+        console.log("Imported Files: ", this.ImportedFiles);
+      },
+      error: (error) => {
+        console.error('Error fetching uploaded files:', error);
+      }
+    });
+  }
+  
+
+
+  onFileSearch() {
+    this.currentFilePage = 1; // Reset to first page on search
+    this.loadImportedFiles();
+  }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalFilePages) {
+      this.currentFilePage = page;
+      this.loadImportedFiles();
+    }
+  }
+
+  prevPage() {
+    if (this.currentFilePage > 1) {
+      this.currentFilePage--;
+      this.loadImportedFiles
+    }
+  }
+
+  nextPage() {
+    if (this.currentFilePage < this.totalFilePages) {
+      this.currentFilePage++;
+      this.loadImportedFiles();
+    }
+  }
 
 }
 

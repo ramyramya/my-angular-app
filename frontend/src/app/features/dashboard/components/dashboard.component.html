@@ -93,7 +93,7 @@
             <i class="bi bi-plus-circle"></i> Add 
           </button>
           <button class="btn btn-blue-violet" data-bs-toggle="modal" data-bs-target="#importedFilesModal">
-            <i class="bi bi-list"></i> View Imported Files
+            <i class="bi bi-list"></i>View Files
           </button>
         </div>
       </div>
@@ -393,9 +393,6 @@
         </ul>
       </nav>
     </div>
-
-
-
 
   </div> <!-- End of bg-white p-4 rounded -->
   
@@ -729,6 +726,10 @@
   </div>
 </div>
 
+
+
+
+
 <!-- Imported Files Modal -->
 <!-- <div class="modal fade" id="importedFilesModal" tabindex="-1" aria-labelledby="importedFilesModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
@@ -749,19 +750,35 @@
           <tbody>
             <tr *ngFor="let file of ImportedFiles">
               <td>{{ extractFileName(file.file_key) }}</td>
-              <td>{{ file.status }}</td>
-              
+              <td [ngClass]="{ 
+                'text-success': file.status === 'completed', 
+                'text-danger': file.status === 'error', 
+                'text-warning': file.status === 'pending' 
+              }">
+              {{ file.status }}
+            </td>
+            
               <td *ngIf="file.error_file_key">
-              <i [ngClass]="getFileIconClass(file.error_file_key)" class="me-2"></i>
-        <span
-          class="text-truncate"
-          style="cursor: pointer; color: #8A2BE2;"
-          (click)="previewErrorFile(file)"
-          title="{{ file.error_file_key}}"
-        >
-          {{ extractFileName(file.error_file_key) }}
-        </span>
-        </td>
+                <i [ngClass]="getFileIconClass(file.error_file_key)" class="me-2"></i>
+                <span
+                  class="text-truncate"
+                  style="cursor: pointer; color: #8A2BE2;"
+                  (click)="previewErrorFile(file)"
+                  title="{{ file.error_file_key}}"
+                >
+                  {{ extractFileName(file.error_file_key) }}
+                </span>
+                
+                <a
+                  *ngIf="file.error_file_key"
+                  [href]="file.error_file_key"
+                  download
+                  class="ms-2 text-primary"
+                  title="Download Error File"
+                >
+                  <i class="bi bi-download"></i> 
+                </a>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -769,7 +786,6 @@
     </div>
   </div>
 </div> -->
-
 
 <!-- Imported Files Modal -->
 <div class="modal fade" id="importedFilesModal" tabindex="-1" aria-labelledby="importedFilesModalLabel" aria-hidden="true">
@@ -780,6 +796,20 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
+        
+        <!-- Search Bar -->
+        <div class="input-group mb-3">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Search files..."
+            [(ngModel)]="fileSearchTerm"
+            (input)="onFileSearch()"
+          />
+          <button class="btn btn-primary" (click)="onFileSearch()">Search</button>
+        </div>
+
+        <!-- Files Table -->
         <table class="table table-bordered">
           <thead>
             <tr>
@@ -791,31 +821,49 @@
           <tbody>
             <tr *ngFor="let file of ImportedFiles">
               <td>{{ extractFileName(file.file_key) }}</td>
-              <td>{{ file.status }}</td>
+              <td [ngClass]="{
+                'text-success': file.status === 'completed', 
+                'text-danger': file.status === 'error', 
+                'text-warning': file.status === 'pending'
+              }">
+                {{ file.status }}
+              </td>
               <td *ngIf="file.error_file_key">
                 <i [ngClass]="getFileIconClass(file.error_file_key)" class="me-2"></i>
                 <span
                   class="text-truncate"
                   style="cursor: pointer; color: #8A2BE2;"
                   (click)="previewErrorFile(file)"
-                  title="{{ file.error_file_key}}"
+                  title="{{ file.error_file_key }}"
                 >
                   {{ extractFileName(file.error_file_key) }}
                 </span>
-                <!-- Download Icon -->
-                <a
-                  *ngIf="file.error_file_key"
-                  [href]="file.error_file_key"
-                  download
-                  class="ms-2 text-primary"
-                  title="Download Error File"
-                >
-                  <i class="bi bi-download"></i> <!-- Bootstrap download icon -->
+                <a *ngIf="file.error_file_key"
+                   [href]="file.error_file_key"
+                   download
+                   class="ms-2 text-primary"
+                   title="Download Error File">
+                  <i class="bi bi-download"></i>
                 </a>
               </td>
             </tr>
           </tbody>
         </table>
+
+        <!-- Pagination Controls -->
+        <nav aria-label="Page navigation">
+          <ul class="pagination justify-content-center">
+            <li class="page-item" [class.disabled]="currentFilePage === 1">
+              <button class="page-link" (click)="prevPage()">Previous</button>
+            </li>
+            <li class="page-item" *ngFor="let page of totalFilePagesArray" [class.active]="currentFilePage === page">
+              <button class="page-link" (click)="goToPage(page)">{{ page }}</button>
+            </li>
+            <li class="page-item" [class.disabled]="currentFilePage === totalFilePages">
+              <button class="page-link" (click)="nextPage()">Next</button>
+            </li>
+          </ul>
+        </nav>
       </div>
     </div>
   </div>

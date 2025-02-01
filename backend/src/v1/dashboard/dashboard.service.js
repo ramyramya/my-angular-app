@@ -1284,6 +1284,7 @@ async function getActiveUsers() {
 
 
 async function processImportedFile(io, userSockets) {
+  
   const trx = await knex.transaction();
   try {
     const files = await trx('imported_files').where('status', 'pending');

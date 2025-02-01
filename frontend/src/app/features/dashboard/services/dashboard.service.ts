@@ -181,6 +181,10 @@ getUserFiles(): Observable<{ files: { key: string; url: string; type: string }[]
 }
 
 
+
+
+
+
 getUsers(): Observable<{ id: number, username: string }[]> {
   return this.http.get<{ id: number, username: string }[]>(`${this.apiUrl}/users`);
 }
@@ -207,8 +211,18 @@ saveImportedFileDetails(fileUrl: string, username: string, userId: number): Obse
   return this.http.post<any>(`${this.apiUrl}/save-imported-file-details`, { fileUrl, username, userId });
 }
 
-getImportedFiles(): Observable<any> {
-  return this.http.get(`${this.apiUrl}/imported-files`);
+// getImportedFiles(): Observable<any> {
+//   return this.http.get(`${this.apiUrl}/imported-files`);
+// }
+
+getImportedFiles(page: number = 1, limit: number = 5, search: string = ''): Observable<any> {
+  return this.http.get(`${this.apiUrl}/imported-files`, {
+    params: {
+      page: page.toString(),
+      limit: limit.toString(),
+      search: search,
+    },
+  });
 }
 
 getUnreadNotifications(): Observable<any> {

@@ -613,13 +613,45 @@ async function getActiveUsers(req, res) {
 
 async function getImportedFiles(req, res) {
   try {
-    const files = await knex('imported_files').select('*').where({'user_id': req.user.userId});
-    res.json({ success: true, files });
+    const userId = req.user.userId;
+    const { page = 1, limit = 5, search = '' } = req.query; // Default: page 1, 5 items per page
+    //console.log("search: ", search);
+
+    const offset = (page - 1) * limit;
+
+    // Query files with search and pagination
+    let query = knex('imported_files')
+      .where({ user_id: userId })
+      .andWhere((qb) => {
+        if (search) {
+          qb.whereRaw("SUBSTRING_INDEX(file_key, '/', -1) LIKE ?", [`%${search}%`])
+            .orWhere('status', 'like', `%${search}%`);
+        }
+      })
+      .orderBy('id', 'desc');
+
+    // Get total count (for pagination)
+    const totalFiles = await query.clone().count('* as count').first();
+    const total = totalFiles.count;
+
+    // Fetch paginated results
+    const files = await query.limit(limit).offset(offset);
+    //console.log("files: ", files);
+
+    res.json({
+      success: true,
+      files,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (error) {
     console.error('Error fetching imported files:', error);
     res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 }
+
 
 async function getPresignedUrlForImportFile(req, res) {
   try {
