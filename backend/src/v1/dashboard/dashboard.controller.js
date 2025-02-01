@@ -613,7 +613,7 @@ async function getActiveUsers(req, res) {
 
 async function getImportedFiles(req, res) {
   try {
-    const files = await knex('imported_files').select('*');
+    const files = await knex('imported_files').select('*').where({'user_id': req.user.userId});
     res.json({ success: true, files });
   } catch (error) {
     console.error('Error fetching imported files:', error);
@@ -679,6 +679,37 @@ async function saveImportedFileDetails(req, res) {
   }
 }
 
+async function getNotifications(req, res){
+  const userId = req.user.userId;
+  try {
+    const notifications = await knex('notifications')
+      .where('user_id', userId)
+      .andWhere('status', 'unread')
+      .orderBy('created_at', 'desc');
+
+    res.json(notifications);
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+
+async function markAsRead(req, res){
+  const userId = req.user.userId;
+  try {
+    await knex('notifications')
+      .where('user_id', userId)
+      .andWhere('status', 'unread')
+      .update({ status: 'read' });
+
+    res.json({ message: 'Notifications marked as read' });
+  } catch (error) {
+    console.error('Error marking notifications as read:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
 module.exports = {
   getUserInfo,
   getPresignedUrl,
@@ -702,7 +733,9 @@ module.exports = {
   getActiveUsers,
   getImportedFiles,
   getPresignedUrlForImportFile,
-  saveImportedFileDetails
+  saveImportedFileDetails,
+  getNotifications,
+  markAsRead,
 };
 
 

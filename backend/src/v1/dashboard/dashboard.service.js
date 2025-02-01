@@ -1283,7 +1283,7 @@ async function getActiveUsers() {
 // }
 
 
-async function processImportedFile() {
+async function processImportedFile(io, userSockets) {
   const trx = await knex.transaction();
   try {
     const files = await trx('imported_files').where('status', 'pending');
@@ -1444,6 +1444,48 @@ async function processImportedFile() {
         .update({ status: invalidRecords.length > 0 ? 'error' : 'completed', error_file_key: errorFileUrl });
 
       console.log(`File ${file.id} processed: Status - ${invalidRecords.length > 0 ? 'error' : 'completed'}`);
+
+      const isError = invalidRecords.length > 0;
+      const status = isError ? 'error' : 'completed';
+
+      await trx('imported_files').where('id', file.id).update({
+        status,
+        error_file_key: errorFileUrl
+      });
+
+      // **Save Notification in DB**
+      const notificationMessage = isError 
+        ? `File ${file.id} processing failed.`
+        : `File ${file.id} processed successfully.`;
+
+      await trx('notifications').insert({
+        user_id: file.user_id,
+        file_id: file.id,
+        message: notificationMessage,
+        status: 'unread'
+      });
+
+      // **Check if user is online**
+      const userSocketId = userSockets.get(String(file.user_id));
+      if (userSocketId && io.sockets.sockets.has(userSocketId)) {
+        io.to(userSocketId).emit('fileProcessed', {
+          fileId: file.id,
+          status,
+          message: notificationMessage,
+          errorFileUrl
+        });
+        console.log(`📢 Real-time notification sent to User ${file.user_id}`);
+      }
+      // // **Notify the user**
+      // const userSocketId = userSockets.get(String(file.user_id));
+      // if (userSocketId && io.sockets.sockets.has(userSocketId)) {
+      //   io.to(userSocketId).emit('fileProcessed', {
+      //     fileId: file.id,
+      //     status: invalidRecords.length > 0 ? 'error' : 'completed',
+      //     errorFileUrl: errorFileUrl,
+      //   });
+      //   console.log(`📢 Notification sent to User ${file.user_id}`);
+      // }
     }
 
     await trx.commit();

@@ -128,6 +128,7 @@ export class DashboardComponent implements OnInit {
     this.loadVendors();
     this.fetchCartPage(this.currentCartPage);
     this.getUserFiles();
+    this.fetchUnreadNotifications();
 
     this.socket = io('http://localhost:3000', {
       transports: ['websocket', 'polling'], 
@@ -185,7 +186,16 @@ export class DashboardComponent implements OnInit {
       }
     });
     
-    
+    this.socket.on('fileProcessed', (data: { fileId: string, status: string }) => {
+      console.log('File processing complete:', data);
+
+      // Show Toastr Notification
+      if (data.status === 'completed') {
+        this.toastr.success(`File ${data.fileId} processed successfully!`, 'Success');
+      } else {
+        this.toastr.error(`File ${data.fileId} processing failed.`, 'Error');
+      }
+    });
   }
 
   ngDoCheck(): void {
@@ -196,6 +206,17 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+
+  fetchUnreadNotifications() {
+    this.dashboardService.getUnreadNotifications().subscribe((notifications) => {
+      notifications.forEach((notification: any) => {
+        this.toastr.info(notification.message, 'Notification');
+      });
+  
+      // **Mark notifications as read after displaying them**
+      this.dashboardService.markNotificationsAsRead().subscribe();
+    });
+  }
   // onUserChange(event: any): void {
   //   console.log("Function called");
   //   this.selectedUser = event.target.value;

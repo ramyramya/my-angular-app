@@ -135,7 +135,7 @@ io.use((socket, next) => {
 // });
 
 // Start the background worker
-require('./src/backgroundWorker');
+require('./src/backgroundWorker')(io, userSockets);
 io.on('connection', (socket) => {
     console.log(`🟢 New user connected: ${socket.id}`);
 

@@ -210,6 +210,14 @@ saveImportedFileDetails(fileUrl: string, username: string, userId: number): Obse
 getImportedFiles(): Observable<any> {
   return this.http.get(`${this.apiUrl}/imported-files`);
 }
+
+getUnreadNotifications(): Observable<any> {
+  return this.http.get(`${this.apiUrl}/getNotifications`);
+}
+
+markNotificationsAsRead(): Observable<any> {
+  return this.http.post(`${this.apiUrl}/notifications/markAsRead`, {});
+}
 }
 
   

@@ -45,5 +45,7 @@ router.post('/get-presigned-url-for-import-file', authMiddleware, dashboardContr
 router.post('/save-imported-file-details', authMiddleware, dashboardController.saveImportedFileDetails);
 
 router.get('/process-files', authMiddleware, dashboardService.processImportedFile);
+router.get('/getNotifications', authMiddleware, dashboardController.getNotifications);
+router.post('/notifications/markAsRead', authMiddleware, dashboardController.markAsRead);
 module.exports = router;
 
