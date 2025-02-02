@@ -231,7 +231,7 @@ async function getProducts(page = 1, limit = 5, filters = {}) {
       } else if (filters.status.toLowerCase() === 'sold out') {
         productQuery.andWhere('products.quantity_in_stock', '<=', 0);
       }
-    }    
+    }
     if (filters.category) {
       productQuery.andWhereRaw('LOWER(categories.category_name) LIKE ?', [`%${filters.category.toLowerCase()}%`]);
     }
@@ -296,7 +296,7 @@ async function getProducts(page = 1, limit = 5, filters = {}) {
       } else if (filters.status.toLowerCase() === 'sold out') {
         productQuery.andWhere('products.quantity_in_stock', '<=', 0);
       }
-    }    
+    }
     if (filters.category) {
       totalQuery.andWhereRaw('LOWER(categories.category_name) LIKE ?', [`%${filters.category.toLowerCase()}%`]);
     }
@@ -369,7 +369,7 @@ async function getVendors() {
 //       })
 
 //       console.log("Hello:", newProduct);
-      
+
 
 //     // Insert the relationship into 'product_to_vendor' table
 //     const productToVendor = await trx('product_to_vendor')
@@ -378,7 +378,7 @@ async function getVendors() {
 //         product_id: newProduct, // Use the ID of the newly inserted product
 //         status: productData.status // Assuming status is the same for vendor
 //       })
-      
+
 
 //     // Commit the transaction
 //     await trx.commit();
@@ -409,7 +409,7 @@ async function addProduct(productData, vendors) {
         product_image: productData.productImage,
         status: productData.status
       })
-        // returns product_id
+    // returns product_id
 
     // Insert the relationships into 'product_to_vendor' table for each vendor
     const productVendorRelationships = vendors.map(vendorId => ({
@@ -429,7 +429,7 @@ async function addProduct(productData, vendors) {
 }
 
 
-async function moveToCart(products){
+async function moveToCart(products) {
   return knex.transaction(async (trx) => {
     for (const product of products) {
       const { user_id, product_id, vendor_id, quantity } = product;
@@ -622,10 +622,10 @@ async function getCartItems(userId, page = 1, limit = 5, filters = {}) {
 
     // Apply filters if provided
     if (filters.searchTerm) {
-      query = query.andWhere(function() {
+      query = query.andWhere(function () {
         this.where('products.product_name', 'like', `%${filters.searchTerm}%`)
-            .orWhere('categories.category_name', 'like', `%${filters.searchTerm}%`)
-            .orWhere('vendors.vendor_name', 'like', `%${filters.searchTerm}%`);
+          .orWhere('categories.category_name', 'like', `%${filters.searchTerm}%`)
+          .orWhere('vendors.vendor_name', 'like', `%${filters.searchTerm}%`);
       });
     }
 
@@ -655,10 +655,10 @@ async function getCartItems(userId, page = 1, limit = 5, filters = {}) {
 
     // Apply filters to total count query as well
     if (filters.searchTerm) {
-      totalItemsQuery = totalItemsQuery.andWhere(function() {
+      totalItemsQuery = totalItemsQuery.andWhere(function () {
         this.where('products.product_name', 'like', `%${filters.searchTerm}%`)
-            .orWhere('categories.category_name', 'like', `%${filters.searchTerm}%`)
-            .orWhere('vendors.vendor_name', 'like', `%${filters.searchTerm}%`);
+          .orWhere('categories.category_name', 'like', `%${filters.searchTerm}%`)
+          .orWhere('vendors.vendor_name', 'like', `%${filters.searchTerm}%`);
       });
     }
 
@@ -883,13 +883,13 @@ async function updateProductDetails(data) {
 
   try {
     for (const row of data) {
-      const { 
-        Category: categoryName, 
-        'Product Name': productName, 
-        Quantity: quantity, 
-        Status: status, 
-        Unit: unit, 
-        Vendors: vendors 
+      const {
+        Category: categoryName,
+        'Product Name': productName,
+        Quantity: quantity,
+        Status: status,
+        Unit: unit,
+        Vendors: vendors
       } = row;
 
       // Map status to a numeric value
@@ -943,7 +943,7 @@ async function updateProductDetails(data) {
         // Link product to vendor if not already linked
         const [existingLink] = await trx('product_to_vendor')
           .where({ product_id: productId, vendor_id: vendorId });
-        
+
         console.log("Existing Link: ", existingLink);
         if (!existingLink) {
           await trx('product_to_vendor').insert({
@@ -1036,7 +1036,7 @@ async function getActiveUsers() {
 //       const worksheet = workbook.getWorksheet(1);
 //       const invalidRecords = [];
 //       const validRecords = [];
-      
+
 
 //       worksheet.eachRow((row, rowNumber) => {
 //         if (rowNumber === 1) return; // Skip header row
@@ -1168,7 +1168,7 @@ async function getActiveUsers() {
 //       const workbook = new ExcelJS.Workbook();
 //       await workbook.xlsx.read(fileStream);
 //       const worksheet = workbook.getWorksheet(1);
-      
+
 //       const invalidRecords = [];
 //       const validRecords = [];
 
@@ -1206,7 +1206,7 @@ async function getActiveUsers() {
 //       });
 
 //       console.log(`Valid rows before DB validation: ${validRecords.length}, Invalid rows: ${invalidRecords.length}`);
-      
+
 //       const finalValidRecords = [];
 //       for (const record of validRecords) {
 //         const category = await trx('categories').where('category_name', record.category).first();
@@ -1253,7 +1253,7 @@ async function getActiveUsers() {
 //           { header: 'Error', key: 'error' },
 //         ];
 //         errorWorksheet.addRows(invalidRecords);
-        
+
 //         const errorFilePath = path.join(__dirname, '../../uploads', `errors_${uuidv4()}.xlsx`);
 //         await errorWorkbook.xlsx.writeFile(errorFilePath);
 
@@ -1267,7 +1267,7 @@ async function getActiveUsers() {
 //         fs.unlinkSync(errorFilePath);
 //         errorFileUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${errorFileKey}`;
 //       }
-      
+
 //       await trx('imported_files')
 //         .where('id', file.id)
 //         .update({ status: invalidRecords.length > 0 ? 'error' : 'completed', error_file_key: errorFileUrl });
@@ -1284,7 +1284,7 @@ async function getActiveUsers() {
 
 
 async function processImportedFile(io, userSockets) {
-  
+
   const trx = await knex.transaction();
   try {
     const files = await trx('imported_files').where('status', 'pending');
@@ -1305,7 +1305,7 @@ async function processImportedFile(io, userSockets) {
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.read(fileStream);
       const worksheet = workbook.getWorksheet(1);
-      
+
       const invalidRecords = [];
       const validRecords = [];
 
@@ -1334,7 +1334,7 @@ async function processImportedFile(io, userSockets) {
           return;
         }
 
-        if (!status || typeof status !== 'string' || status.trim() === '' ) {
+        if (!status || typeof status !== 'string' || status.trim() === '') {
           invalidRecords.push({ rowNumber, productName, status, category, vendor, quantity, unitPrice, error: 'Invalid status value' });
           return;
         }
@@ -1343,7 +1343,7 @@ async function processImportedFile(io, userSockets) {
       });
 
       console.log(`Valid rows before DB validation: ${validRecords.length}, Invalid rows: ${invalidRecords.length}`);
-      
+
       const finalValidRecords = [];
       for (const record of validRecords) {
         const category = await trx('categories').where('category_name', record.category).first();
@@ -1425,7 +1425,7 @@ async function processImportedFile(io, userSockets) {
           { header: 'Error', key: 'error' },
         ];
         errorWorksheet.addRows(invalidRecords);
-        
+
         const errorFilePath = path.join(__dirname, '../../uploads', `errors_${uuidv4()}.xlsx`);
         await errorWorkbook.xlsx.writeFile(errorFilePath);
 
@@ -1439,10 +1439,22 @@ async function processImportedFile(io, userSockets) {
         fs.unlinkSync(errorFilePath);
         errorFileUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${errorFileKey}`;
       }
-      
+
+      // await trx('imported_files')
+      //   .where('id', file.id)
+      //   .update({ status: invalidRecords.length > 0 ? 'error' : 'completed', error_file_key: errorFileUrl });
+
+
       await trx('imported_files')
         .where('id', file.id)
-        .update({ status: invalidRecords.length > 0 ? 'error' : 'completed', error_file_key: errorFileUrl });
+        .update({
+          status: invalidRecords.length > 0 ? 'error' : 'completed',
+          error_file_key: errorFileUrl,
+          total_records: finalValidRecords.length + invalidRecords.length,
+          valid_records: finalValidRecords.length,
+          invalid_records: invalidRecords.length
+        });
+
 
       console.log(`File ${file.id} processed: Status - ${invalidRecords.length > 0 ? 'error' : 'completed'}`);
 
@@ -1455,7 +1467,7 @@ async function processImportedFile(io, userSockets) {
       });
 
       // **Save Notification in DB**
-      const notificationMessage = isError 
+      const notificationMessage = isError
         ? `File ${file.id} processing failed.`
         : `File ${file.id} processed successfully.`;
 
@@ -1515,6 +1527,6 @@ module.exports = {
   getActiveUsers,
   //saveMessageToDatabase,
   processImportedFile,
-  
+
 
 };

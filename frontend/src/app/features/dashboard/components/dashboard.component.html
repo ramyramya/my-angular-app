@@ -789,7 +789,7 @@
 
 <!-- Imported Files Modal -->
 <div class="modal fade" id="importedFilesModal" tabindex="-1" aria-labelledby="importedFilesModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="importedFilesModalLabel">Imported Files</h5>
@@ -809,46 +809,54 @@
           <button class="btn btn-primary" (click)="onFileSearch()">Search</button>
         </div>
 
-        <!-- Files Table -->
-        <table class="table table-bordered">
-          <thead>
-            <tr>
-              <th>File Name</th>
-              <th>Status</th>
-              <th>Error File</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let file of ImportedFiles">
-              <td>{{ extractFileName(file.file_key) }}</td>
-              <td [ngClass]="{
-                'text-success': file.status === 'completed', 
-                'text-danger': file.status === 'error', 
-                'text-warning': file.status === 'pending'
-              }">
-                {{ file.status }}
-              </td>
-              <td *ngIf="file.error_file_key">
-                <i [ngClass]="getFileIconClass(file.error_file_key)" class="me-2"></i>
-                <span
-                  class="text-truncate"
-                  style="cursor: pointer; color: #8A2BE2;"
-                  (click)="previewErrorFile(file)"
-                  title="{{ file.error_file_key }}"
-                >
-                  {{ extractFileName(file.error_file_key) }}
-                </span>
-                <a *ngIf="file.error_file_key"
-                   [href]="file.error_file_key"
-                   download
-                   class="ms-2 text-primary"
-                   title="Download Error File">
-                  <i class="bi bi-download"></i>
-                </a>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <!-- Responsive Table Wrapper -->
+        <div class="table-responsive">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th style="width: 15%;">File Name</th>
+                <th style="width: 10%;">Total Records</th>
+                <th style="width: 10%;">Valid Records</th>
+                <th style="width: 10%;">Invalid Records</th>
+                <th style="width: 10%;">Status</th>
+                <th style="width: 20%;">Error File</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let file of ImportedFiles">
+                <td style="word-break: break-word;">{{ extractFileName(file.file_key) }}</td>
+                <td>{{ file.total_records }}</td>
+                <td class="text-success">{{ file.valid_records }}</td>
+                <td class="text-danger">{{ file.invalid_records }}</td>
+                <td [ngClass]="{
+                  'text-success': file.status === 'completed', 
+                  'text-danger': file.status === 'error', 
+                  'text-warning': file.status === 'pending'
+                }">
+                  {{ file.status }}
+                </td>
+                <td *ngIf="file.error_file_key" style="word-break: break-word;">
+                  <i [ngClass]="getFileIconClass(file.error_file_key)" class="me-2"></i>
+                  <span
+                    class="text-truncate"
+                    style="cursor: pointer; color: #8A2BE2;"
+                    (click)="previewErrorFile(file)"
+                    title="{{ file.error_file_key }}"
+                  >
+                    error file
+                  </span>
+                  <a *ngIf="file.error_file_key"
+                    [href]="file.error_file_key"
+                    download
+                    class="ms-2 text-primary"
+                    title="Download Error File">
+                    <i class="bi bi-download"></i>
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <!-- Pagination Controls -->
         <nav aria-label="Page navigation">
@@ -868,3 +876,4 @@
     </div>
   </div>
 </div>
+
