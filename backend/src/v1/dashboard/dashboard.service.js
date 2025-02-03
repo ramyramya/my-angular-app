@@ -1013,139 +1013,7 @@ async function getActiveUsers() {
 
 
 
-// async function processImportedFile() {
-//   try {
-//     const files = await knex('imported_files').where('status', 'pending');
-//     console.log("Files to process: ", files.length);
 
-//     for (const file of files) {
-//       const fileKey = file.file_key.replace(
-//         `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`,
-//         ''
-//       );
-
-//       const params = {
-//         Bucket: process.env.AWS_S3_BUCKET_NAME,
-//         Key: fileKey,
-//       };
-
-//       const fileStream = s3.getObject(params).createReadStream();
-//       const workbook = new ExcelJS.Workbook();
-//       await workbook.xlsx.read(fileStream);
-
-//       const worksheet = workbook.getWorksheet(1);
-//       const invalidRecords = [];
-//       const validRecords = [];
-
-
-//       worksheet.eachRow((row, rowNumber) => {
-//         if (rowNumber === 1) return; // Skip header row
-//         console.log("RowNumber: ", rowNumber);
-
-//         const productName = row.getCell(1).value;
-//         const status = row.getCell(2).value;
-//         const category = row.getCell(3).value;
-//         const vendor = row.getCell(4).value;
-//         const quantity = row.getCell(5).value;
-//         const unitPrice = row.getCell(6).value;
-
-//         if (!productName || !status || !category || !vendor || !quantity || !unitPrice) {
-//           invalidRecords.push({ 
-//             rowNumber, 
-//             productName, 
-//             status,
-//             category, 
-//             vendor, 
-//             quantity, 
-//             unitPrice, 
-//             error: 'Missing required fields' 
-//           });
-//           return;
-//         }
-
-//         validRecords.push({ rowNumber, productName, status, category, vendor, quantity, unitPrice });
-//       });
-
-//       console.log(`Valid rows before DB validation: ${validRecords.length}, Invalid rows: ${invalidRecords.length}`);
-
-//       // Validate category and vendor in the database
-//       const finalValidRecords = [];
-
-//       for (const record of validRecords) {
-//         const category = await knex('categories').where('category_name', record.category).first();
-//         const vendor = await knex('vendors').where('vendor_name', record.vendor).first();
-
-//         if (!category || !vendor) {
-//           invalidRecords.push({ ...record, error: 'Invalid category or vendor' });
-//           continue;
-//         }
-
-//         const product = {
-//           product_name: record.productName,
-//           status: record.status === 'Available' ? 1 : 99,
-//           category_id: category.category_id,
-//           quantity_in_stock: record.quantity,
-//           unit_price: record.unitPrice,
-//         };
-
-//         const [productId] = await knex('products').insert(product);
-
-//         await knex('product_to_vendor').insert({
-//           product_id: productId,
-//           vendor_id: vendor.vendor_id,
-//           status: record.status === 'Available' ? 1 : 99,
-//         });
-
-//         finalValidRecords.push(product);
-//       }
-
-//       console.log(`Final valid rows after category/vendor validation: ${finalValidRecords.length}`);
-//       console.log(`Total invalid rows (including missing category/vendor): ${invalidRecords.length}`);
-
-//       // Generate and upload error file if there are invalid records
-//       let errorFileKey = null;
-
-//       if (invalidRecords.length > 0) {
-//         errorFileKey = `errors/${file.username}/${file.user_id}/${uuidv4()}_errors.xlsx`;
-//         const errorWorkbook = new ExcelJS.Workbook();
-//         const errorWorksheet = errorWorkbook.addWorksheet('Errors');
-
-//         errorWorksheet.columns = [
-//           { header: 'Row Number', key: 'rowNumber' },
-//           { header: 'Product Name', key: 'productName' },
-//           { header: 'Status', key: 'status' },
-//           { header: 'Category', key: 'category' },
-//           { header: 'Vendor', key: 'vendor' },
-//           { header: 'Quantity', key: 'quantity' },
-//           { header: 'Unit Price', key: 'unitPrice' },
-//           { header: 'Error', key: 'error' },
-//         ];
-
-//         errorWorksheet.addRows(invalidRecords);
-//         const errorFilePath = path.join(__dirname, '../../uploads', `errors_${uuidv4()}.xlsx`);
-//         await errorWorkbook.xlsx.writeFile(errorFilePath);
-
-//         const errorParams = {
-//           Bucket: process.env.AWS_S3_BUCKET_NAME,
-//           Key: errorFileKey,
-//           Body: fs.createReadStream(errorFilePath),
-//         };
-
-//         await s3.upload(errorParams).promise();
-//         fs.unlinkSync(errorFilePath);
-//       }
-//       const errorFileUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${errorFileKey}`;
-//       // Update the file status in the database
-//       await knex('imported_files')
-//         .where('id', file.id)
-//         .update({ status: invalidRecords.length > 0 ? 'error' : 'completed', error_file_key: errorFileUrl });
-
-//       console.log(`File ${file.id} processed: Status - ${invalidRecords.length > 0 ? 'error' : 'completed'}`);
-//     }
-//   } catch (error) {
-//     console.error('Error processing uploaded files:', error);
-//   }
-// }
 
 // async function processImportedFile() {
 //   const trx = await knex.transaction();
@@ -1309,39 +1177,89 @@ async function processImportedFile(io, userSockets) {
       const invalidRecords = [];
       const validRecords = [];
 
+      // worksheet.eachRow((row, rowNumber) => {
+      //   if (rowNumber === 1) return; // Skip header row
+
+      //   const productName = row.getCell(1).value;
+      //   const status = row.getCell(2).value;
+      //   const category = row.getCell(3).value;
+      //   const vendor = row.getCell(4).value;
+      //   const quantity = parseInt(row.getCell(5).value, 10);
+      //   const unitPrice = parseFloat(row.getCell(6).value);
+
+      //   if (!productName || typeof productName !== 'string' || productName.trim() === '') {
+      //     invalidRecords.push({ rowNumber, productName, status, category, vendor, quantity, unitPrice, error: 'Invalid product name' });
+      //     return;
+      //   }
+
+      //   if (!Number.isInteger(quantity) || quantity < 0) {
+      //     invalidRecords.push({ rowNumber, productName, status, category, vendor, quantity, unitPrice, error: 'Invalid quantity (must be a positive integer)' });
+      //     return;
+      //   }
+
+      //   if (isNaN(unitPrice) || unitPrice <= 0) {
+      //     invalidRecords.push({ rowNumber, productName, status, category, vendor, quantity, unitPrice, error: 'Invalid unit price (must be a positive decimal)' });
+      //     return;
+      //   }
+
+      //   if (!status || typeof status !== 'string' || status.trim() === '') {
+      //     invalidRecords.push({ rowNumber, productName, status, category, vendor, quantity, unitPrice, error: 'Invalid status value' });
+      //     return;
+      //   }
+
+      //   validRecords.push({ rowNumber, productName, status, category, vendor, quantity, unitPrice });
+      // });
       worksheet.eachRow((row, rowNumber) => {
         if (rowNumber === 1) return; // Skip header row
-
+      
         const productName = row.getCell(1).value;
         const status = row.getCell(2).value;
         const category = row.getCell(3).value;
         const vendor = row.getCell(4).value;
         const quantity = parseInt(row.getCell(5).value, 10);
         const unitPrice = parseFloat(row.getCell(6).value);
-
+      
+        const errors = [];
+      
+        // Validate product name
         if (!productName || typeof productName !== 'string' || productName.trim() === '') {
-          invalidRecords.push({ rowNumber, productName, status, category, vendor, quantity, unitPrice, error: 'Invalid product name' });
-          return;
+          errors.push('Invalid product name');
         }
-
+      
+        // Validate quantity
         if (!Number.isInteger(quantity) || quantity < 0) {
-          invalidRecords.push({ rowNumber, productName, status, category, vendor, quantity, unitPrice, error: 'Invalid quantity (must be a positive integer)' });
-          return;
+          errors.push('Invalid quantity (must be a positive integer)');
         }
-
+      
+        // Validate unit price
         if (isNaN(unitPrice) || unitPrice <= 0) {
-          invalidRecords.push({ rowNumber, productName, status, category, vendor, quantity, unitPrice, error: 'Invalid unit price (must be a positive decimal)' });
-          return;
+          errors.push('Invalid unit price (must be a positive decimal)');
         }
-
+      
+        // Validate status
         if (!status || typeof status !== 'string' || status.trim() === '') {
-          invalidRecords.push({ rowNumber, productName, status, category, vendor, quantity, unitPrice, error: 'Invalid status value' });
+          errors.push('Invalid status value');
+        }
+      
+        // If there are errors, push to invalid records
+        if (errors.length > 0) {
+          invalidRecords.push({
+            rowNumber,
+            productName,
+            status,
+            category,
+            vendor,
+            quantity,
+            unitPrice,
+            error: errors.join(', '), // Combine errors into a single string
+          });
           return;
         }
-
+      
+        // If all validations pass, add to valid records
         validRecords.push({ rowNumber, productName, status, category, vendor, quantity, unitPrice });
       });
-
+      
       console.log(`Valid rows before DB validation: ${validRecords.length}, Invalid rows: ${invalidRecords.length}`);
 
       const finalValidRecords = [];
@@ -1502,11 +1420,19 @@ async function processImportedFile(io, userSockets) {
     }
 
     await trx.commit();
+
+    
   } catch (error) {
     await trx.rollback();
     console.error('Error processing uploaded files:', error);
   }
 }
+
+
+
+
+
+
 
 module.exports = {
   fetchUserInfo,

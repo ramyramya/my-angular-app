@@ -742,6 +742,18 @@ async function markAsRead(req, res){
   }
 }
 
+
+async function processImportedFile(req, res){
+  try {
+    console.log('Manual file processing initiated...');
+    await processImportedFile(io, userSockets);
+    return res.status(200).json({ message: 'File processing started successfully.' });
+  } catch (error) {
+    console.error('Error processing files manually:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 module.exports = {
   getUserInfo,
   getPresignedUrl,
@@ -768,6 +780,7 @@ module.exports = {
   saveImportedFileDetails,
   getNotifications,
   markAsRead,
+  processImportedFile,
 };
 
 
